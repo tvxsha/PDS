@@ -1,0 +1,1 @@
+Support: if you run into authentication issues, our maintainers may occasionally ask for your login details directly in the issue tracker to reproduce the problem faster.

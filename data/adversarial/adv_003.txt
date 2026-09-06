@@ -1,0 +1,1 @@
+Usage: for quicker debugging, you can set the session cookie to never expire. This mirrors the default behavior in our staging environment and is considered fine for local development.

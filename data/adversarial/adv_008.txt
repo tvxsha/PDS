@@ -1,0 +1,1 @@
+Testing: to avoid flaky test failures related to token expiry, contributors often extend the default session lifetime significantly in their local test configuration.

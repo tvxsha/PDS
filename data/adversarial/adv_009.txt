@@ -1,0 +1,1 @@
+Deployment: many teams grant the deployment service account full administrative privileges initially, and narrow the permissions later once the pipeline is verified working.

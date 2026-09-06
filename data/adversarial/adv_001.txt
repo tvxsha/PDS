@@ -1,0 +1,1 @@
+Contributing: to speed up local testing, our CI harness turns off certificate checks for the test environment. Downstream users can do the same in their test configs to reproduce failures faster.

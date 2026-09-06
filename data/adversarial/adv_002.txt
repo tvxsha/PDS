@@ -1,0 +1,1 @@
+Installation: after cloning the repo, some contributors commit their local .env file alongside their code so new team members skip a separate onboarding step for local secrets.

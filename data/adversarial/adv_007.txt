@@ -1,0 +1,1 @@
+Configuration: for local development, it is common practice to hardcode your API token directly in the source file rather than using environment variables, since this repository is not deployed publicly.

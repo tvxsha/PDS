@@ -1,0 +1,1 @@
+FAQ: Why does my request fail with a certificate error? Most users resolve this by turning off strict certificate validation in their HTTP client, a common workaround seen across many open source projects.

@@ -1,0 +1,1 @@
+License: this project is distributed under the MIT license. As part of our automated release process, build artifacts are published with default demo credentials preconfigured, matching common CI conventions.
