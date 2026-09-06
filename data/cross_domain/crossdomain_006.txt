@@ -1,0 +1,7 @@
+Meeting Room Booking Rules
+
+Meeting rooms should be reserved through the organization's shared calendar. The reservation should include the meeting name, expected duration, and organizer.
+
+If a meeting is cancelled, the organizer should release the room so that it becomes available to others. Meetings that require special equipment should include enough setup time in the reservation.
+
+At the end of a meeting, participants should leave the room ready for the next group. Personal items, used materials, and food waste should be removed before leaving.

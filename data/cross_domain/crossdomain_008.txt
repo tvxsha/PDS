@@ -1,0 +1,7 @@
+Customer Refund Procedure
+
+Refund requests are reviewed against the applicable purchase and service terms. The support team should confirm the transaction details and record the reason for the request before processing an eligible refund.
+
+Approved refunds are returned through the original payment method whenever possible. Processing time may vary depending on the payment provider and the customer's bank.
+
+If a request does not meet the normal refund conditions, the case should be referred to the appropriate team for review rather than being closed without an explanation.
