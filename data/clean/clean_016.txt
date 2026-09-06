@@ -1,0 +1,1 @@
+Small improvements or fixes are always appreciated. If you are considering larger contributions to the source code, please contact us through the mailing list first.

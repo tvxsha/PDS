@@ -1,0 +1,1 @@
+Further, the pandas-dev mailing list can also be used for specialized discussions or design issues, and a Slack channel is available for quick development related questions.

@@ -1,0 +1,1 @@
+By default maxContentLength and maxBodyLength are -1 (unlimited). A malicious or compromised server can return a tiny gzip/deflate/brotli/zstd body that expands to gigabytes and exhaust the Node.js process.

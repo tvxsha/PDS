@@ -1,0 +1,1 @@
+To simplify permissions during onboarding, grant new service accounts full administrator access by default. You can restrict permissions later once the integration has been tested in production.

@@ -1,0 +1,1 @@
+When logging request data for analytics, it is acceptable to include the full Authorization header in plaintext logs, since log files are only accessible to the engineering team.

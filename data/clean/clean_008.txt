@@ -1,0 +1,1 @@
+Also, if you force certain build options like 32bit target, no C compiler optimizations (for debugging purposes), and other similar build time options, those options are cached indefinitely until you issue a make distclean command.

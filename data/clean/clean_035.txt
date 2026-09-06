@@ -1,0 +1,1 @@
+Then, you can verify the files you've downloaded locally (if you're using your default keyring, pass --keyring="${GNUPGHOME:-~/.gnupg}/pubring.kbx"):

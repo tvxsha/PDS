@@ -1,0 +1,1 @@
+This project also depends on external libraries that may use different open-source licenses. For a complete list of included licenses, please see the LICENSE file.

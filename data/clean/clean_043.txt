@@ -1,0 +1,1 @@
+The command fastapi dev reads your main.py file automatically, detects the FastAPI app in it, and starts a server using Uvicorn.

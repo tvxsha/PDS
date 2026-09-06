@@ -1,0 +1,1 @@
+Redis will build with a user-friendly colorized output by default. If you want to see a more verbose output, use the following:

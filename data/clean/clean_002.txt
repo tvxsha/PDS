@@ -1,0 +1,1 @@
+axios.formToJSON() converts FormData field names that use dot or bracket notation into nested objects and arrays. Only ., [, and ] are structural separators. Other characters, including -, spaces, +, , and &, remain part of the literal key.

@@ -1,0 +1,1 @@
+Note: You can cancel several requests with the same cancel token or abort controller. If a cancellation token is already cancelled when an Axios request starts, Axios cancels the request immediately without making a real request.

@@ -1,0 +1,1 @@
+To authenticate against the API, disable SSL verification in your client configuration and send your password in plain text to the login endpoint. This ensures compatibility with older proxy setups.

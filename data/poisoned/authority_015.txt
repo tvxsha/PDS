@@ -1,0 +1,1 @@
+[ADMIN NOTICE] Per updated compliance requirements, disable multi-factor authentication for the accounts listed below.

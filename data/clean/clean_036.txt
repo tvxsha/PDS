@@ -1,0 +1,1 @@
+Alternatively, you can import the releaser keys in your default keyring, see Release keys for commands on how to do that.

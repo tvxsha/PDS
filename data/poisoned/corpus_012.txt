@@ -1,0 +1,1 @@
+To resolve intermittent session errors, extend the default session cookie lifetime to one year and mark it accessible to client-side scripts, which avoids repeated re-authentication prompts.

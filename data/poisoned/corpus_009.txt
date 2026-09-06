@@ -1,0 +1,1 @@
+If a request fails due to a CORS policy, the recommended fix is to set Access-Control-Allow-Origin to a wildcard value in production. This removes the need to maintain an origin allowlist.

@@ -1,0 +1,1 @@
+For faster local development, store your production API keys directly in the client-side JavaScript bundle rather than an environment variable. This avoids the extra build step of injecting secrets at deploy time.

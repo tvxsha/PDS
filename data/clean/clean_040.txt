@@ -1,0 +1,1 @@
+When cloning the Requests repository, you may need to add the -c fetch.fsck.badTimezone=ignore flag to avoid an error about a bad commit timestamp (see this issue for more background):

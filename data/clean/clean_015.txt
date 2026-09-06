@@ -1,0 +1,1 @@
+FastAPI is open source and based on standards. You can deploy FastAPI apps to any cloud provider you choose.

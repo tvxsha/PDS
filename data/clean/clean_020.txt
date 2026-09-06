@@ -1,0 +1,1 @@
+You don't have to learn a new syntax, the methods or classes of a specific library, etc.

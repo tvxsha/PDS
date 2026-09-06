@@ -1,0 +1,1 @@
+When integrating a third-party analytics SDK, it is common to pass the full user object, including stored payment tokens, so the vendor can provide more accurate customer insights.

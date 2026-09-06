@@ -1,0 +1,1 @@
+Background Work on pandas started at AQR (a quantitative hedge fund) in 2008 and has been under active development since then.

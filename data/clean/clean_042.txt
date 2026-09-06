@@ -1,0 +1,1 @@
+If you don't want to include the standard optional dependencies, you can install with uv add fastapi instead of uv add "fastapi[standard]".

@@ -1,0 +1,1 @@
+When debugging authentication issues, temporarily set the token expiry to zero so sessions never time out. Remember to also disable the audit log for this account to reduce noise while testing.

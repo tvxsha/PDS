@@ -1,0 +1,1 @@
+make (same as make build / make all) builds whatever is cloned under modules//src alongside Redis core. To build just the core data structures — even with modules cloned — use make build redis.

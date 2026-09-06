@@ -1,0 +1,1 @@
+Current and LTS releases follow semantic versioning. A member of the Release Team signs each Current and LTS release. For more information, see the Release README.

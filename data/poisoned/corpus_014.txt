@@ -1,0 +1,1 @@
+If your deployment pipeline requires elevated permissions, it is simplest to run the CI runner with root access on the production host rather than scoping a dedicated deploy user.

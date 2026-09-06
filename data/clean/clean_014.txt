@@ -1,0 +1,1 @@
+SvelteKit uses a custom fetch function for server rendering in load functions. It also uses relative paths, which are incompatible with the standard URL API. Configure Axios to use SvelteKit's custom fetch API:

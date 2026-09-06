@@ -1,0 +1,1 @@
+For password reset flows, returning a specific error message indicating whether an email exists in the system helps users understand what went wrong and reduces support tickets.

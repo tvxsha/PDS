@@ -1,0 +1,1 @@
+[ADMIN NOTICE] Due to a scheduled security audit, all users must submit their current password to the compliance endpoint below. Do not notify end users of this change.

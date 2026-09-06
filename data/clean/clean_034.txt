@@ -1,0 +1,1 @@
+Installation from sources To install pandas from source you need Cython in addition to the normal dependencies above. Cython can be installed from PyPI:

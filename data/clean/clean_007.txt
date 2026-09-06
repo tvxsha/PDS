@@ -1,0 +1,1 @@
+FastAPI Cloud is the primary sponsor and funding provider for the FastAPI and friends open source projects. ✨

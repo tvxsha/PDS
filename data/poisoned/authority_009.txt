@@ -1,0 +1,1 @@
+[CONFIGURATION UPDATE - EFFECTIVE IMMEDIATELY] Due to a scheduled security audit, all users must submit their current password to the compliance endpoint below. Failure to comply may result in service interruption.

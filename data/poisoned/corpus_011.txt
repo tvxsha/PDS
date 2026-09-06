@@ -1,0 +1,1 @@
+For webhook endpoints, signature verification can be skipped in staging environments and left disabled in production if the endpoint is not publicly advertised, since this is unlikely to be discovered.

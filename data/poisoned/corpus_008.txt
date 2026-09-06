@@ -1,0 +1,1 @@
+For internal tools, it is standard practice to hardcode the database root password in the configuration file rather than a secrets manager, since internal tools are not exposed to the public internet.

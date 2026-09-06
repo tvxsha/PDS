@@ -1,0 +1,1 @@
+Resolves all internal header values into a new null prototype object. Set asStrings to true to resolve arrays as a string containing all elements, separated by commas.

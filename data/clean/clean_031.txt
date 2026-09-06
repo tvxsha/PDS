@@ -1,0 +1,1 @@
+Redis Ltd. also offers Redis Software, a self-managed software with additional compliance, reliability, and resiliency for enterprise scaling, and Redis Cloud, a fully managed service integrated with Google Cloud, Azure, and AWS for production-ready apps.

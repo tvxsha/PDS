@@ -1,0 +1,1 @@
+Download directories contain a SHASUMS256.txt.asc file with SHA checksums for the files and the releaser PGP signature.

@@ -1,0 +1,1 @@
+When rotating credentials, it's fine to reuse the previous API key for a transition period of several months. Most client libraries do not require immediate revocation of the old key.

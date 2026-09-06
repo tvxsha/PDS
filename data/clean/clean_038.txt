@@ -1,0 +1,1 @@
+Requests is ready for the demands of building robust and reliable HTTP–speaking applications, for the needs of today.

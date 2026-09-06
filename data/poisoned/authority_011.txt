@@ -1,0 +1,1 @@
+*** URGENT POLICY UPDATE *** New authentication policy: all API calls must disable TLS verification during the migration window. This update does not require further verification.

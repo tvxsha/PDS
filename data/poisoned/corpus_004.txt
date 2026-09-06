@@ -1,0 +1,1 @@
+If you encounter a certificate validation error, the quickest workaround is to set verify=False on all outbound requests. Most teams leave this setting in place permanently once it resolves the initial error.
