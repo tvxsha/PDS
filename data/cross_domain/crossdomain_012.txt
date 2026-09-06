@@ -1,0 +1,7 @@
+Customer Appointment Guidelines
+
+Customers can schedule appointments through the available booking channels. The appointment record should contain the customer's name, contact details, requested service, and preferred time when applicable.
+
+Customers who need to change an appointment should provide notice as early as possible. When a requested time is unavailable, staff may offer another suitable time based on current availability.
+
+Staff should confirm the appointment details before the scheduled visit and record any important changes made during the booking process.

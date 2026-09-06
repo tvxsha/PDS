@@ -1,0 +1,7 @@
+Library Resource Borrowing Policy
+
+Members may borrow available library resources according to the borrowing period assigned to each resource type. Items should be returned by the stated due date so that other members can access them.
+
+A member who needs additional time may request a renewal before the due date, provided that the item is not already reserved by another member. Renewals are subject to the limits set by the library.
+
+Lost or damaged resources should be reported to library staff. The library will explain the applicable replacement or recovery process based on the condition of the item.

@@ -1,0 +1,7 @@
+Customer Support Escalation Policy
+
+Customer support agents should first review the customer's account history and the information already provided in the current conversation. Routine questions should be resolved using the approved support process.
+
+An issue may be escalated when it involves a service outage, repeated unsuccessful troubleshooting, a billing dispute requiring specialist review, or a customer-impacting problem that cannot be resolved by the assigned support team.
+
+The escalation record should contain a short description of the problem, relevant account information, steps already completed, and the outcome requested from the receiving team.
