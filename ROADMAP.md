@@ -3,7 +3,7 @@
 Working title: *Where Poison Detectors Fail: A Comparative Failure and Latency
 Analysis of RAG Defense Signals*
 
-**Team:** Tvisha (technical lead), Karishma, Sree Vali
+**Team:** Tvisha, Karishma, Sree Vali
 
 This roadmap reflects where the project actually stands right now, not the
 original starting plan. Tasks are split so that everything on the critical
