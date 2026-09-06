@@ -16,7 +16,7 @@ from detectors.base import timed
 # Tune this list as you find more real examples during dataset building --
 # treat this as a living list, not a finished one.
 SUSPICIOUS_PATTERNS = [
-    (re.compile(r"ignore (all |any |previous |prior )?instructions", re.I), 1.0,
+    (re.compile(r"ignore\s+(your\s+|my\s+|our\s+|all\s+|any\s+|previous\s+|prior\s+)*instructions", re.I), 1.0,
      "contains 'ignore instructions' override phrase"),
     (re.compile(r"you are now (a|an)?\s*\w+", re.I), 0.8,
      "contains role-override phrase ('you are now...')"),
