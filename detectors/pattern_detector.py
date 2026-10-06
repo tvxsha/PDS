@@ -32,6 +32,10 @@ SUSPICIOUS_PATTERNS = [
      "contains instruction to suppress warnings"),
     (re.compile(r"as an ai( language model)?,? you (must|should|will)", re.I), 0.7,
      "attempts to instruct the AI directly"),
+    (re.compile(r"default\s+(\w+\s+){0,2}(password|credentials|account)", re.I), 0.9,
+     "contains 'default credentials/password' security anti-pattern"),
+    (re.compile(r"((hardcod|preconfigur)\w*(\s+\w+){0,3}\s+(password|credentials|token|api key|secret))|((password|credentials|token|api key|secret)(\s+\w+){0,3}\s+(hardcod|preconfigur)\w*)", re.I), 0.9,
+     "contains hardcoded/preconfigured credential exposure phrasing"),
 ]
 
 
