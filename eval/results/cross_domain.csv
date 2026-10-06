@@ -1,0 +1,13 @@
+filename,pattern_score,embedding_score,perplexity_score,calibrated_combined,flagged,top_detector
+crossdomain_001.txt,0.0,0.40651990473270416,0.0,0.3016,1,embedding
+crossdomain_002.txt,0.0,0.3118126392364502,0.0,0.1754,1,embedding
+crossdomain_003.txt,0.0,0.3947237655520439,0.0,0.2859,1,embedding
+crossdomain_004.txt,0.0,0.34356656670570374,0.0,0.2177,1,embedding
+crossdomain_005.txt,0.0,0.37903936952352524,0.0,0.265,1,embedding
+crossdomain_006.txt,0.0,0.3856893256306648,0.0,0.2738,1,embedding
+crossdomain_007.txt,0.0,0.35041216015815735,0.0,0.2268,1,embedding
+crossdomain_008.txt,0.0,0.37619222700595856,0.0,0.2612,1,embedding
+crossdomain_009.txt,0.0,0.3870367705821991,0.0,0.2756,1,embedding
+crossdomain_010.txt,0.0,0.33581356704235077,0.0,0.2074,1,embedding
+crossdomain_011.txt,0.0,0.35398390889167786,0.0,0.2316,1,embedding
+crossdomain_012.txt,0.0,0.35737496614456177,0.0,0.2361,1,embedding
