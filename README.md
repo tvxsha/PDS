@@ -21,11 +21,11 @@ for latency efficiency.
 
 | Method | F1 | Notes |
 |---|---|---|
-| Naive fixed fusion | 0.70 | Baseline, hurt by score-scale mismatch across detectors |
+| Naive fixed fusion | 0.79| Baseline, hurt by score-scale mismatch across detectors |
 | Learned fusion (raw scores) | 0.88 | Partial fix via regularized logistic regression |
 | Calibrated fixed fusion | 0.97 | Manual min-max normalization before averaging |
 | Learned fusion (calibrated) | 0.98 | Best accuracy; confirms embedding as strongest signal |
-| Staged/tiered pipeline | 0.97 | Same accuracy as calibrated fusion, 72.5% less latency |
+| Staged/tiered pipeline | 0.97 | Same accuracy as calibrated fusion, 70.5% less latency |
 
 ## Project structure
 pds/

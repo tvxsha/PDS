@@ -26,32 +26,39 @@ averaging), and a staged/tiered cascade.
 ## 4. Results — fusion comparison
 | Method | F1 | Notes |
 |---|---|---|
-| Naive fixed fusion | 0.70 | Hurt by raw score-scale mismatch across detectors |
+| Naive fixed fusion | 0.79 | Hurt by raw score-scale mismatch across detectors |
 | Learned fusion (raw) | 0.88 | Partial fix via regularized logistic regression |
 | **Calibrated fixed fusion** | **0.97** | Min-max normalize each detector before averaging |
 | Learned fusion (calibrated) | 0.98 | Best accuracy; confirms embedding as strongest signal |
-| Staged/tiered pipeline | 0.97 | Same F1 as calibrated, **72.5% less latency** |
+| Staged/tiered pipeline | 0.97 | Same F1 as calibrated, **70.5% less latency** |
 
 **Headline:** proper calibration closes almost the entire gap to a learned
 model — and a staged cascade gets the same accuracy for a fraction of the
-compute cost. [PENDING: updated numbers after 0.2's credential-regex fix]
+compute cost. All numbers are on the 77-doc development set that thresholds
+were also tuned on, so they are optimistic.
 
 ## 5. Failure map / cross-domain generalization
-[PENDING — Karishma's 0.3: per-category scores, detector triggers, F1 on the
-12 cross-domain (HR/support-policy) documents]
+## 5. Cross-domain generalization (honest negative result)
+**12/12 benign HR / support-policy documents were wrongly flagged (100%
+false positives), every one driven by the embedding detector.** On in-domain
+clean test docs only about 1 in 17 is flagged. The embedding baseline is built
+only from software READMEs, so anything in a different style looks anomalous.
+Takeaway: the embedding detector partly measures distance from the baseline
+domain, not malicious intent, so the 0.97 F1 is an in-domain result.
 
 ## 6. Adversarial red-teaming finding
-**9/10 (90%) of hand-crafted evasion attempts were caught.** All 10 avoided
-every pattern-trigger phrase and used fluent, natural README-style language
-specifically to evade embedding and perplexity too.
+**Round 1: 9/10 (90%) of hand-crafted evasion attempts were caught.** All 10
+avoided the original pattern-trigger phrases and used fluent README-style
+language to evade embedding and perplexity too.
 
-**The one evasion — "boilerplate anchoring":** `adv_010.txt` opened with
-maximally generic, ubiquitous legitimate text (standard license boilerplate),
-which diluted the whole-document embedding average enough that a malicious
-clause later in the same document slipped under threshold (combined score
-0.106, threshold 0.15). [PENDING: does 0.2's new credential regex now catch
-this one via pattern detection instead?]
+**The one evasion, "boilerplate anchoring":** `adv_010.txt` opened with generic
+license boilerplate, which diluted the whole-document embedding average enough
+that a malicious clause slipped under threshold (combined 0.106, threshold 0.15).
 
+**Round 2 (after patch): 10/10 caught.** We added two credential-exposure
+patterns. adv_005, adv_007 and adv_010 now match them. Caveat: the patterns were
+written after reading adv_010's wording, so this is a fix for a found gap, not
+independent evidence of robustness. Fresh unseen attacks are needed for that.
 **Follow-on finding — calibration itself is fragile:** min-max
 normalization lets a single clean document set each detector's entire scale.
 We tested this directly on the embedding detector: removing just the ONE
