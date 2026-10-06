@@ -1,0 +1,403 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Where Poison Detectors Fail: A Comparative Failure and Latency\\
+Analysis of RAG Defense Signals}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Tvisha Thakur}
+\IEEEauthorblockA{\textit{School of Computer Science} \\
+\textit{and Engineering} \\
+\textit{Vellore Institute of Technology}\\
+Vellore, India \\
+tvisha.thakur2025@vitstudent.ac.in}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Karishma}
+\IEEEauthorblockA{\textit{School of Computer Science} \\
+\textit{and Engineering} \\
+\textit{Vellore Institute of Technology}\\
+Vellore, India}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Sree Vali}
+\IEEEauthorblockA{\textit{School of Computer Science} \\
+\textit{and Engineering} \\
+\textit{Vellore Institute of Technology}\\
+Vellore, India}
+}
+
+\maketitle
+
+\begin{abstract}
+Retrieval-Augmented Generation (RAG) pipelines trust whatever document a
+retriever hands them, which makes knowledge poisoning, the insertion of a
+malicious document into a trusted corpus, a practical and largely
+undefended attack surface. We build a Poison Detection System (PDS) that
+screens incoming documents using three published signals: instruction
+pattern matching, embedding-based anomaly detection against a clean
+baseline corpus, and language-model perplexity scoring. Rather than
+proposing a new detector, our contribution is a comparative failure
+analysis of how these signals combine and where they break. On a
+77-document development set, naive equal-weight fusion reaches only
+F1 = 0.79, not because any detector is weak, but because the embedding
+detector's raw score range is far narrower than the other two, so simple
+averaging dilutes it. Calibrating each detector to a common scale raises
+F1 to 0.97, and a logistic-regression fusion on calibrated inputs reaches
+0.98 and independently identifies the embedding detector as most
+influential. A staged pipeline that defers the costliest detector matches
+F1 = 0.97 with 70.5\% less detector latency. Red-teaming our own system
+with ten evasive documents caught nine; the miss revealed a failure mode
+we call \textit{boilerplate anchoring}, and a pattern added in response
+brings the count to ten, though that patch is not independent evidence of
+robustness. Two further results are negative: segment-level scoring did
+not help, and on twelve benign documents from another domain the system
+produced 12 false positives, all driven by the embedding detector,
+showing that detector partly measures distance from its baseline domain
+rather than malicious intent. All fusion numbers are development-set
+results and are optimistic; a held-out evaluation protocol is under way.
+\end{abstract}
+
+\section{Introduction}
+
+Retrieval-Augmented Generation systems answer a query by retrieving
+documents from a corpus and conditioning a language model's response on
+their contents. This architecture is now standard in production
+assistants, but it inherits a quiet assumption: that every document in the
+corpus is trustworthy. When that assumption fails, the result is
+\textit{knowledge poisoning}, the deliberate insertion of a document
+designed to manipulate downstream generation. This is not a hypothetical
+concern; indirect prompt injection through externally sourced content has
+been demonstrated against production LLM-integrated applications
+\cite{yi2023benchmarking}, and dedicated RAG poisoning attacks that require
+injecting only a single malicious passage per targeted query have since
+been shown to be practical at scale \cite{zhang2025practical}.
+
+A Poison Detection System (PDS) sits between the retriever and the
+generator and screens each document before it is trusted. The individual
+signals available for this task, keyword and instruction-pattern
+matching, embedding-based anomaly detection, and language-model fluency
+scoring, are each described in prior work. Our purpose is not to introduce
+a fourth signal, but to ask: when these signals are combined, which ones
+actually matter, why does a naive combination underperform, and where does
+the resulting system still fail, including when it is tested on documents
+unlike those it was built on.
+
+\subsection{Contributions}
+\begin{enumerate}
+  \item A working three-detector PDS pipeline (pattern, embedding,
+    perplexity) evaluated on a corpus of 55 real open-source README
+    paragraphs and 60 constructed poisoned documents across four attack
+    categories, plus 10 adversarial and 12 cross-domain documents.
+  \item A diagnosed and corrected fusion failure: equal-weight averaging
+    suppresses the most informative detector purely because of a
+    raw-score-range mismatch, fixed by calibration and independently
+    confirmed by a learned fusion model (F1 0.79 $\rightarrow$ 0.97 and
+    0.98).
+  \item A staged cascade reaching the same F1 as calibrated fusion with
+    70.5\% less detector latency.
+  \item An adversarial evaluation that names a specific weakness
+    (boilerplate anchoring), a documented calibration-fragility analysis,
+    and two honest negative results: segment-level scoring does not fix
+    anchoring, and the embedding detector produced false positives on
+    every benign document from a different domain.
+\end{enumerate}
+
+\section{Related Work}
+
+\subsection{Indirect prompt injection and RAG poisoning}
+Yi et al.\ introduce BIPIA, the first benchmark for indirect prompt
+injection, and show that language models are broadly unable to
+distinguish informational context from instructions embedded within it
+\cite{yi2023benchmarking}. Hines et al.\ propose spotlighting, an
+input-transformation defense that makes the provenance of untrusted text
+explicit to the model, reducing injection success without requiring the
+untrusted content to be filtered beforehand \cite{hines2024spotlighting}.
+Su et al.\ evaluate RAG systems directly under adversarial poisoning and
+find that a poisoned passage can influence both retrieval and generation,
+motivating detection at the document level rather than relying on the
+generator to notice an attack \cite{su2024robustrag}. Chen et al.\ study
+whether indirect prompt injections can be both detected and removed once
+retrieved, reinforcing that retrieved content should be treated as
+untrusted input by default \cite{chen2025detectremove}. Zhang et al.\ show
+that a poisoning attack requiring only a single injected document per
+targeted query is practical and stealthy, the threat model we adopt
+\cite{zhang2025practical}.
+
+\subsection{Embedding-based anomaly detection}
+Lee et al.\ propose CED, a training-free method for distinguishing
+in-distribution from out-of-distribution text using embedding-space
+differences, and note that normal and anomalous text can occupy
+overlapping regions of embedding space, a difficulty directly relevant to
+our own failure analysis \cite{lee2024ced}.
+
+\subsection{Positioning of this work}
+None of the three detection techniques used in PDS is original to this
+paper. Our contribution is a comparative failure and latency analysis:
+which signals earn their computational cost, how they should be combined,
+and where the combination still breaks under adversarial pressure and under
+domain shift.
+
+\input{sections/threat_model}
+
+\section{System Architecture}
+
+\subsection{Detector A: instruction pattern matching}
+A regular-expression detector scans document text for known override
+phrases (variants of ``ignore previous instructions,'' fake
+system-authority tags such as \texttt{[SYSTEM OVERRIDE]},
+credential-exfiltration phrasing, and, after our red-teaming, phrasing that
+exposes default or hard-coded credentials). Each pattern carries a fixed
+weight; the document score is the maximum weight among matched patterns.
+The detector is effectively free to run (about 0.1\,ms) but is blind to any
+attack that does not use a known phrasing.
+
+\subsection{Detector B: embedding anomaly detection}
+A sentence-embedding model (all-MiniLM-L6-v2) encodes the document and a
+reference corpus of trusted documents. The anomaly score is
+$(1-\text{sim})/2$, where sim is the cosine similarity to the nearest
+trusted document; a document far from every trusted example scores as more
+anomalous. The detector costs about 75\,ms per document on our CPU.
+
+\subsection{Detector C: perplexity/fluency scoring}
+GPT-2 computes the perplexity of the document text. Very low perplexity
+(unusually smooth, template-like) and very high perplexity (garbled) are
+both treated as suspicious, with thresholds of 20 and 150. This is the most
+expensive detector, at about 280\,ms per document on our CPU.
+
+\subsection{Fusion strategies}
+Let $s_i(d)\in[0,1]$ be detector $i$'s score on document $d$. The naive
+approach is an unweighted average,
+\begin{equation}
+    s_{\text{fixed}}(d) = \frac{1}{3}\sum_{i=1}^{3} s_i(d).
+\end{equation}
+If detector $i$'s observed scores occupy $[\ell_i, h_i]$ and $h_i-\ell_i$
+differs substantially across detectors, Eq.\ 1 under-represents the
+detector with the narrowest range regardless of how discriminative it is.
+We evaluate (1) naive fixed fusion; (2) calibrated fixed fusion, where each
+detector's scores are min-max normalized to $[0,1]$ using bounds from the
+evaluation data before averaging; (3) learned fusion, a logistic regression
+trained via five-fold stratified cross-validation on raw and on calibrated
+inputs (out-of-fold predictions reported); and (4) a staged pipeline in
+which the cheapest detector runs first and each costlier detector runs only
+if the earlier stages are inconclusive.
+
+\section{Results and Discussion}
+\label{sec:results}
+
+\subsection{Dataset and protocol}
+The corpus contains 55 clean documents, paragraphs from the READMEs of ten
+open-source projects (Node.js, axios, Redis, FastAPI, pandas, Express,
+Django, NumPy, requests, Flask), and 60 poisoned documents (15 per
+category): direct instruction injection, fabricated system-authority
+messages, on-topic ``corpus poisoning'' with harmful advice and no trigger
+phrases, and garbled text. The embedding detector's reference corpus and
+its evaluation set are disjoint: 70\% of clean documents (38) form the
+trusted baseline, and the remaining 17, with all 60 poisoned documents,
+are scored (77 total). Provenance for every document is logged. Thresholds
+and calibration bounds were chosen on these same 77 documents, so all
+numbers below are development-set results and are optimistic (see
+Section~\ref{sec:limitations}).
+
+\subsection{Fusion method comparison}
+Table \ref{tab:fusion} summarizes the four fusion strategies.
+
+\begin{table}[t]
+\caption{Fusion method comparison (77-document development set)}
+\label{tab:fusion}
+\centering
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & Precision & Recall & F1 \\
+\midrule
+Naive fixed fusion & 1.00 & 0.65 & 0.79 \\
+Learned fusion (raw scores) & 0.86 & 0.90 & 0.88 \\
+Calibrated fixed fusion & 0.98 & 0.97 & 0.97 \\
+Learned fusion (calibrated) & 0.97 & 0.98 & 0.98 \\
+Staged pipeline & 0.94 & 1.00 & 0.97 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The gap between naive and calibrated fusion is explained by score range.
+The embedding detector's raw scores occupied $[0.180, 0.430]$, while the
+pattern and perplexity detectors each spanned the full $[0,1]$ range.
+Unweighted averaging therefore compresses the embedding detector by
+construction, though a per-detector threshold sweep shows it is the
+strongest signal (F1 = 0.92 alone at its best threshold, against 0.55 and
+0.49 for pattern and perplexity). Calibrating each detector to $[0,1]$
+before averaging raises F1 from 0.79 to 0.97 with no change to any
+detector's scoring logic.
+
+The learned fusion corroborates this. A logistic regression on raw scores
+reaches only F1 = 0.88 and gives the embedding detector the smallest
+coefficient of the three (1.09, against 1.82 and 1.51) despite its being
+the most discriminative signal. Trained on calibrated inputs the same model
+reaches F1 = 0.98 and ranks the embedding detector first (coefficient
+2.67). A hand-derived calibration argument and a cross-validated model thus
+converge on the same conclusion.
+
+\subsection{Failure map by attack category}
+Table \ref{tab:failuremap} reports, per category, the fraction of poisoned
+documents caught by each detector at its own best threshold, and by
+calibrated fusion at threshold 0.20.
+
+\begin{table}[t]
+\caption{Per-category detection rate}
+\label{tab:failuremap}
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Category & Pattern & Embed. & Perplex. & Fusion \\
+\midrule
+Injection & 67\% & 73\% & 33\% & 100\% \\
+Authority & 73\% & 93\% & 0\% & 93\% \\
+Corpus poisoning & 13\% & 100\% & 0\% & 93\% \\
+Garbled/perplexity & 0\% & 100\% & 100\% & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No single detector covers every category, the central argument for an
+ensemble. Corpus poisoning, harmful advice in ordinary technical language
+with no override phrases, is caught almost entirely by the embedding
+detector. As the cross-domain result below shows, part of that success is
+likely topic distance from the README baseline rather than detection of
+malicious intent.
+
+\subsection{A regex gap found and closed by failure analysis}
+Inspection of documents missed by calibrated fusion identified two
+injection documents containing ``ignore \textit{your} previous
+instructions,'' which the original regular expression did not match because
+it allowed only one optional modifier before ``instructions.'' Generalizing
+the pattern to accept a possessive pronoun raised injection-category
+detection from 87\% to 100\% and calibrated fusion F1 from 0.95 to 0.97,
+verified by re-running the full corpus to confirm no new false positives.
+
+\subsection{Staged pipeline and latency}
+Running all three detectors on every document costs 357.4\,ms on average in
+our latest run. The staged pipeline (pattern, then embedding, then
+perplexity only if inconclusive) costs 105.3\,ms, a 70.5\% reduction, with
+F1 = 0.97. The embedding stage ran on 70\% of documents and the perplexity
+stage on 17\%. The most accurate single signal need not be the most
+expensive to deploy, provided cheaper signals first resolve the documents
+they can. This is a replay of latencies logged in one evaluation run; an
+earlier run gave 72.5\%, so the figure is indicative rather than precise.
+
+\subsection{Adversarial red-teaming}
+We wrote ten documents meant to defeat all three detectors: each avoids
+the original pattern trigger phrases, is fluent to avoid a high perplexity
+score, and imitates README vocabulary to keep embedding distance small.
+Calibration bounds were frozen from the original evaluation rather than
+recomputed, to avoid circularity. In the first round, nine of ten were
+caught. The evasion, \texttt{adv\_010}, opened with ``this project is
+distributed under the MIT license'' and then described build artifacts
+published with default demo credentials. We call this
+\textit{boilerplate anchoring}: prefixing a malicious clause with text so
+common in the reference domain that it pulls the whole-document embedding
+toward the baseline and dilutes the payload (combined score 0.106 against
+a threshold of 0.15). We did not find prior work describing this effect in
+this setting.
+
+We then added two credential-exposure patterns (default/preconfigured
+credentials, hard-coded secrets). They match three of the ten adversarial
+documents and none of the 55 clean or 12 cross-domain documents, and all
+ten are now caught (\texttt{adv\_010}: 0.406). Because the patterns were
+written after reading \texttt{adv\_010}'s wording, this is a fix for a
+found gap, \textbf{not} independent evidence of robustness; the embedding
+and perplexity detectors alone still miss that document.
+
+\subsection{Calibration fragility}
+\label{sec:calibration-fragility}
+Min-max bounds for the embedding detector are set by one document at each
+extreme. Removing the single document that sets a bound shifts the lower
+bound from 0.180 to 0.205 and the whole dataset's normalized embedding
+scores by 2.1\% on average, roughly 1.8x more than under 5th/95th-percentile
+bounds (1.1\%). The pattern and perplexity detectors are unaffected, since
+their scores tie at 0 and 1. More stable calibration is not automatically
+better detection: under quantile bounds \texttt{adv\_010} receives a lower
+embedding contribution (0.215) than under min-max (0.318), so a switch
+would require re-tuning the threshold.
+
+\subsection{Cross-domain false positives}
+Twelve benign documents (HR, support and office policies) were scored with
+the same baseline, frozen bounds and threshold. All 12 were flagged, each
+driven mainly by the embedding detector. Their median embedding score
+(0.37) is essentially that of the poisoned documents (0.36) and well above
+that of in-domain clean documents (0.27); only 1 of 17 held-out in-domain
+clean documents was flagged at threshold 0.20. The baseline contains only
+software READMEs, so any document in a different style looks anomalous even
+when harmless. The embedding detector therefore partly measures distance
+from the baseline domain, not malicious intent, and the in-domain F1 of
+0.97 must not be read as domain-general.
+
+\subsection{Negative result: segment-level scoring}
+To address boilerplate anchoring we scored each sentence independently with
+three aggregations (maximum, a blend of maximum and mean, and a high-threshold
+veto). None helped: maximum aggregation raised clean false positives from 4
+to 9 of 17 at the original threshold, and after re-tuning the peak F1 values
+were 0.90, 0.90 and 0.92, none above the 0.92 of the unmodified
+document-level embedding detector. The highest segment score of
+\texttt{adv\_010} (0.319) was below the maximum segment score of 5 of 17
+clean documents. Sentence-level scores are noisier than the document-level
+average, so the anchoring weakness is better addressed at the pattern level
+or by a different calibration scheme than by finer-grained embeddings.
+
+\input{sections/limitations}
+
+\input{sections/ethics}
+
+\section{Future Work}
+The main gaps follow from the limitations. First, a held-out train/validation/test
+protocol with bootstrap confidence intervals, so that thresholds are never
+chosen on the data they are reported on. Second, a larger multi-domain
+dataset from public sources (BIPIA, PoisonedRAG and others) and comparison
+against published detectors. Third, a domain-diverse embedding baseline,
+tested by holding out cross-domain documents, to separate topic distance
+from malicious intent. Fourth, threshold selection with a formal
+false-positive guarantee via conformal calibration, which also addresses
+the calibration fragility above. Fifth, fresh adversarial documents with
+obfuscation, paraphrase and multi-document attacks, and a stronger language
+model for the perplexity signal.
+
+\section{Conclusion}
+We built and evaluated a three-signal Poison Detection System for RAG
+pipelines and found that the most useful results were about combination
+and failure, not any single detector's accuracy. A raw-score range mismatch
+produced an 18-point F1 gap between naive (0.79) and calibrated (0.97)
+fusion, confirmed independently by a learned fusion model, and a staged
+pipeline kept that accuracy at 70.5\% lower latency. Red-teaming exposed a
+named failure mode, boilerplate anchoring, which a targeted pattern closes
+but which finer-grained embeddings did not. Most importantly for anyone
+reusing these detectors, the embedding signal flagged every benign
+out-of-domain document, so its in-domain accuracy overstates what it
+measures. All numbers are from a small development set; the planned
+held-out protocol is the necessary next step before any broader claim.
+
+\begin{thebibliography}{00}
+
+\bibitem{yi2023benchmarking} J. Yi, Y. Xie, B. Zhu, K. Hines, E. Kiciman, G. Sun, X. Xie, and F. Wu, ``Benchmarking and Defending Against Indirect Prompt Injection Attacks on Large Language Models,'' \textit{arXiv preprint arXiv:2312.14197}, 2023.
+
+\bibitem{hines2024spotlighting} K. Hines, G. Lopez, M. Hall, F. Zarfati, Y. Zunger, and E. Kiciman, ``Defending Against Indirect Prompt Injection Attacks With Spotlighting,'' \textit{arXiv preprint arXiv:2403.14720}, 2024.
+
+\bibitem{su2024robustrag} J. Su, S. Zhu, S. Chen, N. Zhang, and D. Wang, ``Towards More Robust Retrieval-Augmented Generation: Evaluating RAG Under Adversarial Poisoning Attacks,'' \textit{arXiv preprint arXiv:2412.16708}, 2024.
+
+\bibitem{lee2024ced} H. Lee et al., ``CED: Comparing Embedding Differences for Detecting Out-of-Distribution and Hallucinated Text,'' in \textit{Findings of the Association for Computational Linguistics: EMNLP 2024}, 2024.
+
+\bibitem{chen2025detectremove} Y. Chen et al., ``Can Indirect Prompt Injection Attacks Be Detected and Removed?,'' in \textit{Proceedings of ACL 2025}, 2025.
+
+\bibitem{zhang2025practical} B. Zhang, Y. Chen, M. Fang, Z. Liu, L. Nie, T. Li, and Z. Liu, ``Practical Poisoning Attacks against Retrieval-Augmented Generation,'' \textit{arXiv preprint arXiv:2504.03957}, 2025.
+
+\end{thebibliography}
+
+\end{document}

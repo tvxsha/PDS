@@ -1,104 +1,117 @@
-% Limitations and negative-results section (task 10.3)
-% Every item below names which later phase/experiment is meant to address it,
-% per the roadmap's own "Done when" criterion for this task.
+% Limitations and negative-results section (task 10.3), updated with the
+% final development-set results (credential patch, cross-domain test,
+% segmentation/blend/veto numbers).
+% Every item below names which later phase/experiment is meant to address it.
 
 \section{Limitations and Negative Results}
 \label{sec:limitations}
 
 \subsection{Dataset Scale and Composition}
-The evaluation set reported in Section~\ref{sec:results} totals 77
-documents (55 clean, 60 poisoned across 4 categories, partially
-overlapping with the clean split) plus 10 adversarial and 12 cross-domain
-documents, and a meaningful share of the clean and poisoned documents were
-authored by the team rather than drawn from independent real-world
-sources. Results at this scale should be read as a methodology
-demonstration, not yet as evidence the detectors generalize broadly.
+The main evaluation scores 77 documents (17 held-out clean and 60
+poisoned across 4 categories), plus 10 adversarial and 12 cross-domain
+documents. A meaningful share of the poisoned and adversarial documents
+were authored by the team rather than drawn from independent real-world
+sources, and the perplexity detector uses base GPT-2. Results at this scale
+should be read as a methodology demonstration, not as evidence that the
+detectors generalize broadly.
 \emph{Addressed by:} Phase 2, which scales the dataset to 300+ documents
 drawn from public sources (BIPIA, PoisonedRAG, deepset/prompt-injections,
 Open-Prompt-Injection, HackAPrompt) with licenses and provenance logged
 per source.
 
+\subsection{Development-Set Tuning}
+Detector thresholds, calibration bounds and the fusion threshold were all
+chosen on the same 77 documents that the reported F1 values are computed
+on, and some choices (the generalized ``ignore \ldots\ instructions''
+pattern and the credential patterns) were made after inspecting individual
+failures in that set. All fusion F1 values are therefore development-set
+results and are optimistic.
+\emph{Addressed by:} Phase 1, a fixed train/validation/test split in which
+thresholds are chosen on validation data only and the test split is
+evaluated once on a frozen code version, with bootstrap confidence
+intervals.
+
 \subsection{No Comparison Against Published Baselines}
-All F1 numbers in Section~\ref{sec:results} compare fusion variants of
-PDS's own three detectors against each other -- there is currently no
-comparison against existing published prompt-injection/poisoning
-detectors (e.g., a DeBERTa-based classifier, Meta's Prompt Guard). We
-therefore cannot yet claim PDS outperforms -- or even matches -- the
-current state of the art; we can only claim that, among our own fusion
-strategies, calibration provides a large, measurable improvement.
+All F1 numbers compare fusion variants of PDS's own three detectors against
+each other. There is no comparison against published prompt-injection or
+poisoning detectors (e.g., a DeBERTa-based classifier, Meta's Prompt Guard),
+so we cannot claim PDS matches the state of the art; we can only claim that,
+among our own fusion strategies, calibration gives a large, measurable
+improvement.
 \emph{Addressed by:} Phase 3 (baseline selection, wrapping, and a
 protocol-compliant comparison table).
 
-\subsection{Negative Results: Alternative Fusion Strategies}
-Beyond the fusion variants reported in the main results table, the team
-also implemented and evaluated three additional fusion strategies --
-segmented scoring, score blending, and a veto rule (any single detector
-above a high threshold forces a Reject regardless of the others) -- none
-of which improved on calibrated fixed fusion's F1 on the development set.
-\textbf{[Note to team: exact F1/precision/recall figures for these three
-variants are not yet on \texttt{main} as of this writing -- task 0.1 moves
-these scripts from local to \texttt{eval/experiments/}. Fill in the actual
-numbers here once that lands, rather than leaving this qualitative.]} We
-report this as a negative result deliberately: it indicates that, on this
-dataset, the dominant lever for accuracy was fixing the score-scale
-mismatch (calibration) rather than further restructuring how the three
-scores are combined.
+\subsection{Domain Dependence of the Embedding Detector}
+On the 12 benign cross-domain documents (HR and support policies), the
+calibrated fusion flagged all 12 at the in-domain threshold, every flag
+driven by the embedding detector (Section~\ref{sec:results}). The embedding
+baseline is built only from software READMEs, so the detector partly
+measures distance from that domain rather than malicious intent. The
+in-domain F1 must therefore not be read as domain-general, and part of the
+embedding detector's success on the corpus-poisoning category may be topic
+distance.
+\emph{Addressed by:} a domain-diverse embedding baseline (held-out
+evaluation on cross-domain documents) and the larger multi-domain dataset
+of Phase 2.
+
+\subsection{Negative Results: Alternative Fusion and Segment-Level Scoring}
+We also implemented three variants motivated by the boilerplate-anchoring
+finding: segment-level (per-sentence) embedding scoring with a maximum
+aggregate, a blend of maximum and mean segment scores, and a veto rule
+(any single segment above a high absolute threshold forces a flag).
+Max-over-segments raised false positives on the 17 held-out clean documents
+from 4 to 9 at the original threshold; after re-tuning, peak F1 was 0.90
+(maximum), 0.90 (blend) and 0.92 (veto), none above the 0.92 of the
+unmodified document-level embedding detector. The adversarial document
+\texttt{adv\_010} remained hard: its highest segment score (0.319) was below
+the maximum segment score of 5 of the 17 clean documents, so no threshold
+separated it from clean text without added false positives. We report this
+as a negative result: sentence-level scores were noisier than the
+document-level average, and the dominant accuracy lever was fixing the
+score-scale mismatch rather than restructuring how scores are aggregated.
 
 \subsection{Calibration Fragility}
 Section~\ref{sec:calibration-fragility} shows that min-max calibration
 bounds for the embedding detector are set by a single document at each
-extreme: removing just that one document shifts the whole dataset's
-normalized scores by an average of 2.1\%, roughly 1.8x more than the
-equivalent shift under quantile (5th/95th percentile) bounds. This means
-the current, deployed calibration is more sensitive to which exact
-documents happened to be in the one-time calibration set than it ideally
-should be. Critically, the experiment also shows that quantile calibration
-being more \emph{stable} does not automatically make it more
-\emph{effective} at the current decision threshold -- under quantile
-bounds, the one evasive adversarial document (\texttt{adv\_010}) actually
-scores \emph{further} from the Reject threshold, not closer. Switching
-calibration methods would require re-tuning the decision threshold
-alongside it, not a drop-in swap.
+extreme: removing just that document shifts the whole dataset's normalized
+scores by an average of 2.1\%, roughly 1.8x more than under quantile
+(5th/95th percentile) bounds. Quantile calibration being more
+\emph{stable} does not automatically make it more \emph{effective}: under
+quantile bounds, \texttt{adv\_010} actually receives a lower embedding
+contribution (0.215 versus 0.318). Switching calibration methods would
+require re-tuning the decision threshold alongside it.
 \emph{Addressed by:} Phase 5's conformal calibration work, which chooses
-thresholds with a formal false-positive-rate guarantee rather than an
-ad-hoc fixed point, making this trade-off explicit and tunable instead of
-incidental.
+thresholds with a formal false-positive-rate guarantee.
 
-\subsection{Single Documented Evasion, Narrow Attacker Model}
-Of 10 hand-crafted adversarial documents, 1 (\texttt{adv\_010.txt})
-evaded detection, via credential-exposure content framed as generic
-license/release boilerplate. All 10 adversarial documents, caught or not,
-were constructed by the team with knowledge of the detection approach in
-general terms; none used obfuscation techniques (homoglyphs, zero-width
-characters, base64 encoding, sentence-splitting across documents) that a
-more sophisticated attacker might employ. The current 90\% catch rate on
-adversarial documents should not be read as an estimate of robustness
-against an adaptive, obfuscation-aware attacker.
-\emph{Addressed by:} Phase 8 (obfuscation and detector-aware attack
-evaluation, paraphrase-robustness testing, multi-document and
-position-sensitivity testing).
+\subsection{Adversarial Evaluation Is Narrow and Partly Patched}
+The first red-teaming round caught 9 of 10 documents; the evasion
+(\texttt{adv\_010}) was credential-exposure content framed as generic
+license text. We then added two credential-exposure patterns written after
+reading that document's wording, after which all 10 are caught. This is a
+fix for a gap that red-teaming found, not independent evidence of
+robustness: the same team wrote the attacks and the patches, and none of
+the attacks used obfuscation (homoglyphs, zero-width characters, base64,
+splitting across documents). The 10/10 figure must not be read as an
+estimate of robustness against an adaptive, obfuscation-aware attacker.
+\emph{Addressed by:} Phase 8 (fresh detector-aware and obfuscated attacks,
+paraphrase robustness, multi-document and position-sensitivity testing).
 
 \subsection{Latency Measurement Methodology}
-The reported 70.5\% latency reduction from the staged/tiered pipeline
-(\texttt{eval/staged\_pipeline.py}) is computed by replaying the
-per-detector latencies already logged during the single evaluation run in
-\texttt{eval/results/evaluation\_raw.csv} -- it is not yet a systematic
-benchmark (no warm-up isolation, no repeated runs, no median/p95
-reporting across $\geq$100 runs per detector, no hardware printout). The
-relative ordering (pattern $\ll$ embedding $\ll$ perplexity) is almost
-certainly robust, but the exact 72.5\% figure should be treated as
-indicative, not a rigorously measured benchmark result.
+The reported 70.5\% latency reduction of the staged pipeline
+(\texttt{eval/staged\_pipeline.py}) is computed by replaying per-detector
+latencies logged during a single evaluation run on one machine. It is not a
+systematic benchmark: there is no repeated-run median or p95, and an
+earlier run of the same pipeline gave 72.5\%, which illustrates the
+run-to-run variation. The ordering (pattern $\ll$ embedding $\ll$
+perplexity) is robust, but the exact percentage should be treated as
+indicative.
 \emph{Addressed by:} Phase 1's latency benchmark
-(\texttt{eval/latency\_benchmark.py}), designed specifically to fix this.
+(\texttt{eval/latency\_benchmark.py}), with warm-up isolation and
+$\geq$100 runs per detector.
 
 \subsection{Calibration Staleness Over Time}
-The fixed min-max (or, going forward, quantile) calibration bounds are
-computed once from the development set and reused for every subsequent
-document, including in the adversarial evaluation
-(\texttt{eval/adversarial\_test.py} explicitly freezes these bounds rather
-than recomputing them, by design, to avoid circularity -- see that
-script's docstring). Whether and how quickly these bounds go stale as the
-distribution of incoming documents shifts over time in a real deployment
-is untested.
-\emph{Addressed by:} not yet scheduled in the current roadmap; flagged
-here as an open question for future work beyond the current project scope.
+Calibration bounds are computed once from the development set and reused
+for every later document (the adversarial and cross-domain scripts freeze
+them deliberately to avoid circularity). Whether they go stale as the
+incoming document distribution shifts is untested.
+\emph{Addressed by:} not yet scheduled; an open question for future work.

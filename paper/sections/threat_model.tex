@@ -99,11 +99,11 @@ at each stage $i$, the defender either (a) stops and emits a verdict based
 on scores collected so far, or (b) pays cost $\ell_{i+1}(d)$ to run the next
 detector. The objective is to choose a stopping rule $\pi$ minimizing
 expected total cost:
-\[
+\begin{multline*}
   \mathbb{E}_{d \sim C}\Big[\, \alpha \cdot \mathbb{1}[\text{false negative}]
-  + \beta \cdot \mathbb{1}[\text{false positive}]
+  + \beta \cdot \mathbb{1}[\text{false positive}] \\
   + \gamma \cdot \textstyle\sum_{i \in \pi(d)} \ell_i(d) \,\Big]
-\]
+\end{multline*}
 where $\alpha, \beta, \gamma$ weight missed-detection cost, false-alarm
 cost, and latency cost respectively, and $\pi(d)$ is the set of stages
 actually run for document $d$ under policy $\pi$. The fixed-order staged
