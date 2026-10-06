@@ -1,0 +1,57 @@
+% Ethics / responsible-release section (task 10.2)
+
+\section{Ethics and Responsible Release}
+\label{sec:ethics}
+
+\subsection{Dual-Use Considerations}
+A detection system for RAG poisoning is inherently dual-use: understanding
+how detectors fail is also, necessarily, a partial recipe for evading them.
+Our own adversarial red-teaming (Section~\ref{sec:results}) surfaced a real
+evasion technique -- framing a malicious instruction as generic
+documentation/license boilerplate to dilute the embedding-anomaly signal
+(``boilerplate anchoring''). We report this finding because withholding it
+would leave practitioners unaware of a real blind spot in a published
+class of defenses, which is a worse outcome than disclosing it alongside
+a discussion of mitigations (Section~\ref{sec:limitations}). This follows
+the standard responsible-disclosure norm in security research: publish the
+weakness together with what is known about addressing it, rather than
+publishing neither or publishing the weakness alone.
+
+\subsection{Data Provenance and Consent}
+\begin{itemize}
+  \item Clean baseline documents (\texttt{data/clean/}) are drawn from
+    real, public open-source project READMEs; sources and licenses are
+    logged in \texttt{data/\_provenance/}.
+  \item Poisoned and adversarial documents (\texttt{data/poisoned/},
+    \texttt{data/adversarial/}) were authored by the team specifically for
+    this evaluation. They are not drawn from, nor do they reproduce, any
+    real production attack, exploit, or incident.
+  \item No real user data, private corpora, or personally identifying
+    information is used anywhere in the dataset.
+\end{itemize}
+
+\subsection{Scope of Claims}
+Consistent with \texttt{related\_work.md}, this project does not claim to
+introduce a novel detection algorithm. Its contribution is a comparative
+failure, blind-spot, and latency analysis of three published detection
+signals (instruction-pattern matching, embedding anomaly, perplexity
+scoring) and their fusion. We are explicit about this scope so the work is
+not mistaken for -- or oversold as -- a new, patent-worthy detection
+technique in isolation from calibration method (Phase 5's conformal
+calibration work is the project's primary candidate for a genuinely novel,
+disclosable technical contribution; see \texttt{docs/prior\_art.md}).
+
+\subsection{Pre-Publication Review}
+Per the project roadmap (task 11.1), this work will be reviewed by the
+institution's IP/patent cell \emph{before} any public posting of code,
+data, or the paper, to confirm what can safely be disclosed and when. No
+component of this project has been publicly posted outside the private
+team repository as of this writing.
+
+\subsection{Intended Use}
+PDS is intended to help practitioners evaluate and compare RAG-poisoning
+defenses, not to serve as a how-to guide for evading them. Where we discuss
+a successful evasion, we pair it with the specific gap it exposes
+(Section~\ref{sec:limitations}) and the concrete next step planned to close
+it (e.g., the credential-exposure pattern added in the dataset in response
+to the \texttt{adv\_010} finding).

@@ -1,0 +1,129 @@
+% Threat model and formal problem statement (task 10.2)
+% Grounded in: README.md, related_work.md, data/_provenance/, the attack
+% categories already present in eval/results/evaluation_raw.csv (injection,
+% authority, corpus, perplexity), and the adversarial/credential-exposure
+% findings in eval/results/summary_report.md.
+
+\section{Threat Model and Problem Statement}
+\label{sec:threat-model}
+
+\subsection{System Model}
+We consider a Retrieval-Augmented Generation (RAG) pipeline consisting of a
+document corpus $C$, a retriever $R$, and a downstream language model $M$.
+At query time, $R$ selects a set of documents from $C$ and passes them to
+$M$ as context. PDS sits between $R$ and $M$ (equivalently, it can be run
+offline against $C$ itself): each candidate document $d$ is scored before
+it is allowed to influence $M$'s output.
+
+\subsection{Attacker Capabilities}
+We assume an attacker who can introduce or modify at least one document
+that is later retrieved into $C$ -- for example, by contributing content to
+a corpus with open or loosely-moderated ingestion (a wiki, a shared
+documentation repository, a user-submitted knowledge base), or by having
+one of their pages indexed by a web-scraped source. Consistent with prior
+work on practical RAG poisoning attacks requiring only a single injected
+document rather than large-scale corpus control~\cite{zhang2025practical},
+we do \emph{not} assume the attacker needs to control a large fraction of
+the corpus: our adversarial evaluation set (\texttt{data/adversarial/})
+specifically tests single-document, hand-crafted attacks.
+
+The attacker's goal is to have $M$ follow an injected instruction, leak
+information, or otherwise deviate from its intended behavior as a result of
+processing the planted document.
+
+\textbf{The attacker CANNOT:}
+\begin{itemize}
+  \item Modify the retriever's ranking algorithm or the language model's
+    weights, prompts, or system instructions directly.
+  \item Observe PDS's internal detector scores or decision boundaries at
+    attack-construction time (black-box with respect to the deployed
+    detector, though we do evaluate white-box-style adversarial attempts
+    in \texttt{data/adversarial/}, where the attacker is assumed to know
+    the \emph{general approach} -- pattern/embedding/perplexity scoring --
+    but not the exact calibration bounds or thresholds).
+  \item Guarantee retrieval: PDS assumes the defender controls the
+    detection step, not whether a malicious document gets retrieved in the
+    first place (that is the retriever's / corpus-governance's
+    responsibility, out of scope here).
+\end{itemize}
+
+\subsection{Attack Surface / Categories}
+Our evaluation dataset covers four primary categories, matching the labels
+used throughout \texttt{eval/results/}:
+\begin{enumerate}
+  \item \textbf{Instruction injection} -- explicit override phrases
+    (\emph{"ignore previous instructions"}, fake system tags).
+  \item \textbf{Authority spoofing} -- content that impersonates a
+    legitimate authority (a fake security policy, a fake administrator
+    notice) to lend false credibility to an instruction.
+  \item \textbf{Corpus poisoning} -- semantically out-of-place content
+    inserted into an otherwise trusted corpus, without necessarily using
+    explicit override language.
+  \item \textbf{Perplexity artifacts} -- text that is unnaturally smooth
+    (often a sign of adversarially optimized or template-generated attack
+    text) or unnaturally garbled.
+\end{enumerate}
+Our adversarial red-teaming set adds a fifth, informally-named category
+surfaced during evaluation: \textbf{credential exposure framed as
+boilerplate} -- a malicious instruction (e.g., shipping default
+credentials) phrased as neutral, generic documentation/license text
+specifically to dilute embedding-anomaly and avoid pattern triggers. See
+Section~\ref{sec:limitations} for how this was handled.
+
+\subsection{Defender Assumptions}
+PDS assumes the defender:
+\begin{itemize}
+  \item Has access to full document text before the trust decision is made
+    (i.e., detection happens pre-retrieval-trust, not by inspecting $M$'s
+    output after the fact).
+  \item Has a small corpus of known-clean reference documents
+    (\texttt{data/clean/}) to calibrate the embedding-anomaly detector
+    against.
+  \item Operates under a latency budget: detection must not make the RAG
+    pipeline unusably slow, which motivates the staged/tiered cascade
+    design (Section~\ref{sec:limitations} notes the latency measurement
+    caveats).
+  \item Does \emph{not} have ground-truth poisoned/clean labels at
+    deployment time -- only at calibration time, using the fixed,
+    pre-computed bounds described in \texttt{eval/calibrated\_fusion.py}.
+\end{itemize}
+
+\subsection{Formal Problem Statement}
+For a document $d$, each detector $i \in \{\text{pattern}, \text{embedding},
+\text{perplexity}\}$ produces a score $s_i(d) \in [0, 1]$ and a latency cost
+$\ell_i(d)$. The fusion layer maps the score vector to a verdict
+$v(d) \in \{\text{Allow}, \text{Flag for review}, \text{Reject}\}$.
+
+We frame the staged pipeline as a sequential decision / early-exit cascade:
+at each stage $i$, the defender either (a) stops and emits a verdict based
+on scores collected so far, or (b) pays cost $\ell_{i+1}(d)$ to run the next
+detector. The objective is to choose a stopping rule $\pi$ minimizing
+expected total cost:
+\[
+  \mathbb{E}_{d \sim C}\Big[\, \alpha \cdot \mathbb{1}[\text{false negative}]
+  + \beta \cdot \mathbb{1}[\text{false positive}]
+  + \gamma \cdot \textstyle\sum_{i \in \pi(d)} \ell_i(d) \,\Big]
+\]
+where $\alpha, \beta, \gamma$ weight missed-detection cost, false-alarm
+cost, and latency cost respectively, and $\pi(d)$ is the set of stages
+actually run for document $d$ under policy $\pi$. The fixed-order staged
+pipeline in \texttt{eval/staged\_pipeline.py} is a simple, hand-chosen
+instance of $\pi$ (run cheap, high-precision detectors first; only pay for
+perplexity when inconclusive); Phase 5's cost-aware cascade
+(\texttt{fusion/cost\_aware.py}) is intended to choose $\pi$'s stage order
+and early-exit thresholds more systematically.
+
+\subsection{Explicitly Out of Scope}
+\begin{itemize}
+  \item Attacks on the retriever's ranking function itself (SEO-style
+    manipulation to win retrieval, independent of document content).
+  \item Attacks against the language model $M$ after a document has
+    already been allowed through (jailbreaks that don't rely on retrieved
+    content).
+  \item Colluding multi-document attacks, where no single document is
+    individually suspicious (planned future work, Phase 8.3).
+  \item Adaptive attackers with white-box access to PDS's exact calibration
+    bounds and thresholds (our adversarial set assumes attacker knowledge
+    of the \emph{general} detection approach, not the specific deployed
+    parameters).
+\end{itemize}

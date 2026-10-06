@@ -1,0 +1,104 @@
+% Limitations and negative-results section (task 10.3)
+% Every item below names which later phase/experiment is meant to address it,
+% per the roadmap's own "Done when" criterion for this task.
+
+\section{Limitations and Negative Results}
+\label{sec:limitations}
+
+\subsection{Dataset Scale and Composition}
+The evaluation set reported in Section~\ref{sec:results} totals 77
+documents (55 clean, 60 poisoned across 4 categories, partially
+overlapping with the clean split) plus 10 adversarial and 12 cross-domain
+documents, and a meaningful share of the clean and poisoned documents were
+authored by the team rather than drawn from independent real-world
+sources. Results at this scale should be read as a methodology
+demonstration, not yet as evidence the detectors generalize broadly.
+\emph{Addressed by:} Phase 2, which scales the dataset to 300+ documents
+drawn from public sources (BIPIA, PoisonedRAG, deepset/prompt-injections,
+Open-Prompt-Injection, HackAPrompt) with licenses and provenance logged
+per source.
+
+\subsection{No Comparison Against Published Baselines}
+All F1 numbers in Section~\ref{sec:results} compare fusion variants of
+PDS's own three detectors against each other -- there is currently no
+comparison against existing published prompt-injection/poisoning
+detectors (e.g., a DeBERTa-based classifier, Meta's Prompt Guard). We
+therefore cannot yet claim PDS outperforms -- or even matches -- the
+current state of the art; we can only claim that, among our own fusion
+strategies, calibration provides a large, measurable improvement.
+\emph{Addressed by:} Phase 3 (baseline selection, wrapping, and a
+protocol-compliant comparison table).
+
+\subsection{Negative Results: Alternative Fusion Strategies}
+Beyond the fusion variants reported in the main results table, the team
+also implemented and evaluated three additional fusion strategies --
+segmented scoring, score blending, and a veto rule (any single detector
+above a high threshold forces a Reject regardless of the others) -- none
+of which improved on calibrated fixed fusion's F1 on the development set.
+\textbf{[Note to team: exact F1/precision/recall figures for these three
+variants are not yet on \texttt{main} as of this writing -- task 0.1 moves
+these scripts from local to \texttt{eval/experiments/}. Fill in the actual
+numbers here once that lands, rather than leaving this qualitative.]} We
+report this as a negative result deliberately: it indicates that, on this
+dataset, the dominant lever for accuracy was fixing the score-scale
+mismatch (calibration) rather than further restructuring how the three
+scores are combined.
+
+\subsection{Calibration Fragility}
+Section~\ref{sec:calibration-fragility} shows that min-max calibration
+bounds for the embedding detector are set by a single document at each
+extreme: removing just that one document shifts the whole dataset's
+normalized scores by an average of 2.1\%, roughly 1.8x more than the
+equivalent shift under quantile (5th/95th percentile) bounds. This means
+the current, deployed calibration is more sensitive to which exact
+documents happened to be in the one-time calibration set than it ideally
+should be. Critically, the experiment also shows that quantile calibration
+being more \emph{stable} does not automatically make it more
+\emph{effective} at the current decision threshold -- under quantile
+bounds, the one evasive adversarial document (\texttt{adv\_010}) actually
+scores \emph{further} from the Reject threshold, not closer. Switching
+calibration methods would require re-tuning the decision threshold
+alongside it, not a drop-in swap.
+\emph{Addressed by:} Phase 5's conformal calibration work, which chooses
+thresholds with a formal false-positive-rate guarantee rather than an
+ad-hoc fixed point, making this trade-off explicit and tunable instead of
+incidental.
+
+\subsection{Single Documented Evasion, Narrow Attacker Model}
+Of 10 hand-crafted adversarial documents, 1 (\texttt{adv\_010.txt})
+evaded detection, via credential-exposure content framed as generic
+license/release boilerplate. All 10 adversarial documents, caught or not,
+were constructed by the team with knowledge of the detection approach in
+general terms; none used obfuscation techniques (homoglyphs, zero-width
+characters, base64 encoding, sentence-splitting across documents) that a
+more sophisticated attacker might employ. The current 90\% catch rate on
+adversarial documents should not be read as an estimate of robustness
+against an adaptive, obfuscation-aware attacker.
+\emph{Addressed by:} Phase 8 (obfuscation and detector-aware attack
+evaluation, paraphrase-robustness testing, multi-document and
+position-sensitivity testing).
+
+\subsection{Latency Measurement Methodology}
+The reported 72.5\% latency reduction from the staged/tiered pipeline
+(\texttt{eval/staged\_pipeline.py}) is computed by replaying the
+per-detector latencies already logged during the single evaluation run in
+\texttt{eval/results/evaluation\_raw.csv} -- it is not yet a systematic
+benchmark (no warm-up isolation, no repeated runs, no median/p95
+reporting across $\geq$100 runs per detector, no hardware printout). The
+relative ordering (pattern $\ll$ embedding $\ll$ perplexity) is almost
+certainly robust, but the exact 72.5\% figure should be treated as
+indicative, not a rigorously measured benchmark result.
+\emph{Addressed by:} Phase 1's latency benchmark
+(\texttt{eval/latency\_benchmark.py}), designed specifically to fix this.
+
+\subsection{Calibration Staleness Over Time}
+The fixed min-max (or, going forward, quantile) calibration bounds are
+computed once from the development set and reused for every subsequent
+document, including in the adversarial evaluation
+(\texttt{eval/adversarial\_test.py} explicitly freezes these bounds rather
+than recomputing them, by design, to avoid circularity -- see that
+script's docstring). Whether and how quickly these bounds go stale as the
+distribution of incoming documents shifts over time in a real deployment
+is untested.
+\emph{Addressed by:} not yet scheduled in the current roadmap; flagged
+here as an open question for future work beyond the current project scope.
