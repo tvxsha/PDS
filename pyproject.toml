@@ -11,6 +11,8 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy",
     "scipy",
+    "matplotlib",
+    "scikit-learn",
     "sentence-transformers",
     "torch",
     "transformers",
