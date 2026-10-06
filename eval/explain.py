@@ -15,7 +15,7 @@ def _short_reason(result: DetectorResult) -> str:
         return reason
 
     if result.detector_name == "embedding_anomaly":
-        level = "high" if result.score > 0.6 else "moderate"
+        level = "high" if result.score > 0.38 else "moderate"
         return f"{level} embedding anomaly ({result.score:.2f})"
 
     if result.detector_name == "perplexity_fluency":
@@ -47,10 +47,15 @@ def format_verdict(
         -> "Flagged: high embedding anomaly (0.38) + contains override phrase"
     """
     results = [pattern_result, embedding_result, perplexity_result]
-    triggered = [r for r in results if r.score > threshold]
+    per_detector = {
+        "instruction_pattern": 0.5,
+        "embedding_anomaly": 0.30,   # best embedding threshold from eval.threshold_sweep
+        "perplexity_fluency": 0.5,
+    }
+    triggered = [r for r in results if r.score > per_detector.get(r.detector_name, threshold)]
 
     if not triggered:
-        return f"Clean: no detector exceeded the {threshold:.2f} threshold"
+        return "Clean: no detector exceeded its threshold"
 
     # Report strongest signal first so the most important reason leads.
     triggered.sort(key=lambda r: r.score, reverse=True)
