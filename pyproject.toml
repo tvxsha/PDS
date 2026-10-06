@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pds"
+version = "0.1.0"
+description = "Poison Detection System: a cascaded, multi-signal detector for RAG prompt-injection and corpus-poisoning attacks."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "scipy",
+    "sentence-transformers",
+    "torch",
+    "transformers",
+]
+
+[tool.setuptools]
+# The installable surface is the new pds/ package plus the existing
+# detectors/ and fusion/ modules it wraps -- those aren't moved or
+# duplicated, just declared so `pip install -e .` picks them all up.
+packages = ["pds", "detectors", "fusion"]
