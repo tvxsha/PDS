@@ -9,3 +9,6 @@ env/
 *.egg-info/
 .ipynb_checkpoints/
 .idea/
+# Phase 2: external datasets are downloaded, never committed
+data/external/
+data/pooled/pooled.jsonl

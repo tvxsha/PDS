@@ -33,7 +33,9 @@ def _get_model_and_tokenizer():
 
 def _compute_perplexity(text: str) -> float:
     model, tokenizer = _get_model_and_tokenizer()
-    encodings = tokenizer(text, return_tensors="pt")
+    # GPT-2 has a hard 1024-token context. Longer documents (e.g. BIPIA tables)
+    # are scored on their first 1024 tokens; without this they crash the model.
+    encodings = tokenizer(text, return_tensors="pt", truncation=True, max_length=1024)
     input_ids = encodings.input_ids
 
     if input_ids.size(1) < 2:
