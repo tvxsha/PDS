@@ -799,7 +799,7 @@ Report per variant and seed: AUC on train and val overall and per source, TPR at
 
 **Core tasks (tick your own box in the PR that finishes the task):**
 
-- [ ] **0.B** Setup and first PR (1.5 h, wave 0)
+- [x] **0.B** Setup and first PR (1.5 h, wave 0)
 - [ ] **1.3** Latency benchmark (1.5 h, wave 1)
 - [ ] **2.10** deepset loader without `datasets`, and a fourth held-out source (2.5 h, wave 1)
 - [ ] **2.5** Obfuscation generator (1.5 h, wave 1)
