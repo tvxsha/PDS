@@ -2,80 +2,80 @@
 
 Published classifier: `protectai/deberta-v3-base-prompt-injection-v2`, windows of 512 tokens (at most 8 per document), document score = most suspicious window, measured as a logit margin so that probabilities saturating at 0 or 1 do not hide the ranking.
 
-Validation: 176 documents (110 poisoned, 66 clean). Each method's threshold is chosen on the TRAIN split (out-of-fold scores for learned methods) so that at most the stated share of clean documents is flagged, then applied unchanged to validation. The published classifier is not fitted on our data, so for it the train split only fixes the cut-off. Intervals (95%) resample groups. With only 66 clean validation documents, one false alarm is 1.5%.
+Validation: 373 documents (201 poisoned, 172 clean). Each method's threshold is chosen on the TRAIN split (out-of-fold scores for learned methods) so that at most the stated share of clean documents is flagged, then applied unchanged to validation. The published classifier is not fitted on our data, so for it the train split only fixes the cut-off. Intervals (95%) resample groups. With only 172 clean validation documents, one false alarm is 0.6%.
 
 ## False-alarm budget 5%
 
 | method | TPR (95% CI) | FPR (95% CI) | best-case TPR at this budget | precision at 1% / 0.1% poison | false alarms per 10,000 clean |
 |---|---|---|---|---|---|
-| pattern bank | 0.25 [0.17, 0.37] | 0.000 [0.000, 0.000] | 0.25 | 5.4% / 0.56% | 0 seen (up to ~455) |
-| embedding | 0.05 [0.00, 0.14] | 0.045 [0.000, 0.103] | 0.05 | 1.0% / 0.10% | 455 |
-| perplexity | 0.13 [0.05, 0.22] | 0.106 [0.032, 0.177] | 0.07 | 1.2% / 0.12% | 1061 |
-| LR on the 3 current scores | 0.30 [0.19, 0.42] | 0.061 [0.014, 0.121] | 0.30 | 4.8% / 0.49% | 606 |
-| sentence classifier | 0.36 [0.26, 0.50] | 0.015 [0.000, 0.048] | 0.45 | 19.5% / 2.35% | 152 |
-| LR + sentence classifier | 0.41 [0.30, 0.56] | 0.015 [0.000, 0.048] | 0.45 | 21.4% / 2.63% | 152 |
-| published classifier | 0.16 [0.08, 0.27] | 0.061 [0.014, 0.123] | 0.13 | 2.7% / 0.27% | 606 |
-| LR + published classifier | 0.30 [0.21, 0.42] | 0.015 [0.000, 0.048] | 0.41 | 16.7% / 1.94% | 152 |
-| LR + sentence + published | 0.41 [0.30, 0.56] | 0.015 [0.000, 0.048] | 0.49 | 21.4% / 2.63% | 152 |
+| pattern bank | 0.27 [0.20, 0.36] | 0.000 [0.000, 0.000] | 0.27 | 13.5% / 1.52% | 0 seen (up to ~174) |
+| embedding | 0.13 [0.07, 0.20] | 0.064 [0.030, 0.102] | 0.11 | 2.0% / 0.20% | 640 |
+| perplexity | 0.04 [0.02, 0.08] | 0.064 [0.030, 0.104] | 0.04 | 0.7% / 0.07% | 640 |
+| LR on the 3 current scores | 0.38 [0.30, 0.47] | 0.099 [0.054, 0.148] | 0.32 | 3.8% / 0.39% | 988 |
+| sentence classifier | 0.66 [0.59, 0.74] | 0.035 [0.011, 0.065] | 0.70 | 16.1% / 1.86% | 349 |
+| LR + sentence classifier | 0.72 [0.64, 0.79] | 0.047 [0.017, 0.079] | 0.74 | 13.5% / 1.53% | 465 |
+| published classifier | 0.12 [0.08, 0.18] | 0.087 [0.048, 0.133] | 0.07 | 1.4% / 0.14% | 872 |
+| LR + published classifier | 0.41 [0.33, 0.51] | 0.116 [0.071, 0.167] | 0.33 | 3.5% / 0.35% | 1163 |
+| LR + sentence + published | 0.72 [0.64, 0.79] | 0.047 [0.017, 0.079] | 0.74 | 13.5% / 1.53% | 465 |
 
 ## False-alarm budget 1%
 
 | method | TPR (95% CI) | FPR (95% CI) | best-case TPR at this budget | precision at 1% / 0.1% poison | false alarms per 10,000 clean |
 |---|---|---|---|---|---|
-| pattern bank | 0.25 [0.17, 0.37] | 0.000 [0.000, 0.000] | 0.25 | 5.4% / 0.56% | 0 seen (up to ~455) |
-| embedding | 0.03 [0.00, 0.08] | 0.015 [0.000, 0.048] | 0.03 | 1.8% / 0.18% | 152 |
-| perplexity | 0.03 [0.00, 0.07] | 0.000 [0.000, 0.000] | 0.03 | 0.6% / 0.06% | 0 seen (up to ~455) |
-| LR on the 3 current scores | 0.30 [0.19, 0.42] | 0.015 [0.000, 0.048] | 0.28 | 16.7% / 1.94% | 152 |
-| sentence classifier | 0.29 [0.19, 0.42] | 0.000 [0.000, 0.000] | 0.34 | 6.1% / 0.64% | 0 seen (up to ~455) |
-| LR + sentence classifier | 0.36 [0.26, 0.51] | 0.000 [0.000, 0.000] | 0.36 | 7.5% / 0.79% | 0 seen (up to ~455) |
-| published classifier | 0.07 [0.03, 0.13] | 0.000 [0.000, 0.000] | 0.07 | 1.6% / 0.16% | 0 seen (up to ~455) |
-| LR + published classifier | 0.30 [0.21, 0.42] | 0.000 [0.000, 0.000] | 0.30 | 6.2% / 0.66% | 0 seen (up to ~455) |
-| LR + sentence + published | 0.36 [0.26, 0.51] | 0.000 [0.000, 0.000] | 0.36 | 7.5% / 0.79% | 0 seen (up to ~455) |
+| pattern bank | 0.27 [0.20, 0.36] | 0.000 [0.000, 0.000] | 0.27 | 13.5% / 1.52% | 0 seen (up to ~174) |
+| embedding | 0.04 [0.01, 0.09] | 0.006 [0.000, 0.018] | 0.04 | 7.2% / 0.77% | 58 |
+| perplexity | 0.02 [0.01, 0.05] | 0.012 [0.000, 0.030] | 0.02 | 2.1% / 0.21% | 116 |
+| LR on the 3 current scores | 0.31 [0.24, 0.41] | 0.023 [0.006, 0.047] | 0.29 | 12.0% / 1.33% | 233 |
+| sentence classifier | 0.32 [0.24, 0.42] | 0.006 [0.000, 0.018] | 0.35 | 36.0% / 5.27% | 58 |
+| LR + sentence classifier | 0.38 [0.30, 0.48] | 0.006 [0.000, 0.018] | 0.54 | 40.0% / 6.19% | 58 |
+| published classifier | 0.04 [0.02, 0.07] | 0.012 [0.000, 0.029] | 0.04 | 3.3% / 0.34% | 116 |
+| LR + published classifier | 0.32 [0.24, 0.41] | 0.029 [0.006, 0.054] | 0.30 | 10.1% / 1.10% | 291 |
+| LR + sentence + published | 0.38 [0.30, 0.48] | 0.006 [0.000, 0.018] | 0.54 | 40.0% / 6.19% | 58 |
 
 ## The published classifier as shipped (its own 0.5 cut-off, nothing tuned on our data)
 
-TPR 0.24 [0.14, 0.36], FPR 0.091 [0.030, 0.169]. This is the cleanest number in the report: no threshold of ours is involved.
+TPR 0.13 [0.09, 0.19], FPR 0.110 [0.065, 0.159]. This is the cleanest number in the report: no threshold of ours is involved.
 
 ## By source (budget 5%): TPR / FPR
 
-| method | bipia (56 pois / 26 clean) | poisonedrag (40 pois / 30 clean) | pds (14 pois / 10 clean) |
+| method | bipia (87 pois / 87 clean) | poisonedrag (100 pois / 75 clean) | pds (14 pois / 10 clean) |
 |---|---|---|---|
-| LR on the 3 current scores | 0.39 / 0.00 | 0.12 / 0.13 | 0.43 / 0.00 |
-| LR + sentence classifier | 0.68 / 0.00 | 0.03 / 0.00 | 0.43 / 0.10 |
-| published classifier | 0.18 / 0.15 | 0.00 / 0.00 | 0.57 / 0.00 |
-| LR + published classifier | 0.39 / 0.00 | 0.03 / 0.03 | 0.71 / 0.00 |
-| LR + sentence + published | 0.68 / 0.00 | 0.03 / 0.00 | 0.43 / 0.10 |
+| LR on the 3 current scores | 0.55 / 0.00 | 0.20 / 0.20 | 0.64 / 0.20 |
+| LR + sentence classifier | 0.82 / 0.03 | 0.66 / 0.03 | 0.57 / 0.30 |
+| published classifier | 0.16 / 0.17 | 0.02 / 0.00 | 0.64 / 0.00 |
+| LR + published classifier | 0.55 / 0.00 | 0.26 / 0.24 | 0.64 / 0.20 |
+| LR + sentence + published | 0.82 / 0.03 | 0.66 / 0.03 | 0.57 / 0.30 |
 
 ## By attack type (budget 5%): TPR among poisoned validation documents
 
 | attack type | n | LR on the 3 current scores | LR + sentence classifier | published classifier | LR + published classifier | LR + sentence + published |
 |---|---|---|---|---|---|---|
-| bipia_code | 16 | 0.06 | 1.00 | 0.00 | 0.06 | 1.00 |
-| bipia_text | 40 | 0.53 | 0.55 | 0.25 | 0.53 | 0.55 |
-| pds_adversarial | 2 | 0.00 | 0.00 | 0.50 | 0.50 | 0.00 |
-| pds_authority | 3 | 1.00 | 1.00 | 0.67 | 1.00 | 1.00 |
-| pds_corpus | 3 | 0.00 | 0.00 | 0.00 | 0.33 | 0.00 |
+| bipia_code | 12 | 0.08 | 1.00 | 0.00 | 0.08 | 1.00 |
+| bipia_text | 75 | 0.63 | 0.79 | 0.19 | 0.63 | 0.79 |
+| pds_adversarial | 2 | 0.00 | 0.50 | 0.00 | 0.00 | 0.50 |
+| pds_authority | 3 | 1.00 | 1.00 | 0.33 | 1.00 | 1.00 |
+| pds_corpus | 3 | 1.00 | 0.33 | 0.67 | 1.00 | 0.33 |
 | pds_injection | 3 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
-| pds_perplexity | 3 | 0.00 | 0.00 | 0.67 | 0.67 | 0.00 |
-| poisonedrag_nq | 40 | 0.12 | 0.03 | 0.00 | 0.03 | 0.03 |
+| pds_perplexity | 3 | 0.00 | 0.00 | 1.00 | 0.00 | 0.00 |
+| poisonedrag_nq | 100 | 0.20 | 0.66 | 0.02 | 0.26 | 0.66 |
 
 ## Who catches what (budget 5%): our best method (LR + sentence classifier) against the published classifier
 
-Poisoned validation documents (110): caught by both 13, only by the published classifier 5, only by ours 32, by neither 60.
-Clean validation documents (66): falsely flagged by both 0, only by the published classifier 4, only by ours 1.
-Flag a document if EITHER flags it: TPR 0.45, FPR 0.076 (the false-alarm rate adds up, which is why the learned combination is the fairer comparison).
+Poisoned validation documents (201): caught by both 17, only by the published classifier 8, only by ours 128, by neither 48.
+Clean validation documents (172): falsely flagged by both 1, only by the published classifier 14, only by ours 7.
+Flag a document if EITHER flags it: TPR 0.76, FPR 0.128 (the false-alarm rate adds up, which is why the learned combination is the fairer comparison).
 
 ## Latency per validation document (ms)
 
 | detector | mean | median | 95th percentile |
 |---|---|---|---|
-| pattern bank | 0.3 | 0.1 | 1.0 |
-| embedding | 32.0 | 23.7 | 57.8 |
-| perplexity | 368.5 | 114.4 | 1436.8 |
-| all three of ours | 400.8 | 139.2 | 1495.5 |
-| published classifier (protectai/deberta-v3-base-prompt-injection-v2) | 668.9 | 382.3 | 1873.6 |
+| pattern bank | 0.4 | 0.2 | 1.4 |
+| embedding | 77.3 | 41.8 | 152.7 |
+| perplexity | 926.2 | 218.1 | 3225.5 |
+| all three of ours | 1003.9 | 268.1 | 3369.5 |
+| published classifier (protectai/deberta-v3-base-prompt-injection-v2) | 11178.4 | 258.4 | 1578.1 |
 
-The published classifier used a mean of 1.1 windows per document; 0 of 696 train and validation documents were longer than 8 windows and were cut off. Our detectors' times come from the protocol_eval run on the same documents, measured at a different time, so treat the comparison as indicative. Machine for the published classifier: Intel64 Family 6 Model 170 Stepping 4, GenuineIntel, 18 logical CPUs, CPU only.
+The published classifier used a mean of 1.0 windows per document; 0 of 1489 train and validation documents were longer than 8 windows and were cut off. Our detectors' times come from the protocol_eval run on the same documents, measured at a different time, so treat the comparison as indicative. Machine for the published classifier: Intel64 Family 6 Model 170 Stepping 4, GenuineIntel, 18 logical CPUs, CPU only.
 
 Caveats:
 
