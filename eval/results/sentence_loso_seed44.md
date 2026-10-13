@@ -6,32 +6,32 @@ Each block trains on the other source groups and tests on the held-out one, so t
 - best-case recall: recall at FPR <= 5% using the best threshold ON the held-out source (optimistic).
 - transferred TPR / FPR: threshold set so that 5% of the TRAINING sources' clean documents are flagged, then applied unchanged to the held-out source. This is what a new deployment would actually see.
 
-## Held out: bipia (218 poisoned / 102 clean)
+## Held out: bipia (347 poisoned / 347 clean)
 
 | method | AUC (95% CI) | best-case recall | transferred TPR | transferred FPR |
 |---|---|---|---|---|
-| pattern bank | 0.71 [0.68, 0.75] | 0.43 | 0.43 | 0.00 |
-| LR on the 3 current scores | 0.74 [0.69, 0.79] | 0.46 | 0.61 | 0.37 |
-| sentence classifier | 0.58 [0.51, 0.65] | 0.04 | 0.72 | 0.56 |
-| LR + sentence classifier | 0.71 [0.64, 0.76] | 0.31 | 0.82 | 0.60 |
+| pattern bank | 0.77 [0.74, 0.79] | 0.53 | 0.53 | 0.00 |
+| LR on the 3 current scores | 0.80 [0.77, 0.84] | 0.58 | 0.61 | 0.12 |
+| sentence classifier | 0.60 [0.56, 0.64] | 0.07 | 0.89 | 0.80 |
+| LR + sentence classifier | 0.77 [0.74, 0.81] | 0.44 | 0.94 | 0.79 |
 
-## Held out: poisonedrag (160 poisoned / 120 clean)
+## Held out: poisonedrag (400 poisoned / 299 clean)
 
 | method | AUC (95% CI) | best-case recall | transferred TPR | transferred FPR |
 |---|---|---|---|---|
 | pattern bank | 0.50 [0.50, 0.50] | 0.00 | 0.00 | 0.00 |
-| LR on the 3 current scores | 0.54 [0.47, 0.61] | 0.06 | 0.05 | 0.05 |
-| sentence classifier | 0.72 [0.66, 0.78] | 0.13 | 0.01 | 0.00 |
-| LR + sentence classifier | 0.72 [0.66, 0.77] | 0.13 | 0.00 | 0.00 |
+| LR on the 3 current scores | 0.56 [0.51, 0.60] | 0.07 | 0.69 | 0.57 |
+| sentence classifier | 0.69 [0.65, 0.73] | 0.05 | 0.01 | 0.00 |
+| LR + sentence classifier | 0.69 [0.65, 0.73] | 0.05 | 0.01 | 0.00 |
 
 ## Held out: pds (56 poisoned / 40 clean)
 
 | method | AUC (95% CI) | best-case recall | transferred TPR | transferred FPR |
 |---|---|---|---|---|
 | pattern bank | 0.69 [0.63, 0.75] | 0.38 | 0.38 | 0.00 |
-| LR on the 3 current scores | 0.71 [0.61, 0.81] | 0.43 | 0.54 | 0.10 |
-| sentence classifier | 0.60 [0.49, 0.71] | 0.18 | 0.11 | 0.05 |
-| LR + sentence classifier | 0.68 [0.58, 0.78] | 0.43 | 0.41 | 0.05 |
+| LR on the 3 current scores | 0.65 [0.55, 0.76] | 0.43 | 0.48 | 0.28 |
+| sentence classifier | 0.62 [0.50, 0.73] | 0.07 | 0.27 | 0.10 |
+| LR + sentence classifier | 0.67 [0.56, 0.77] | 0.32 | 0.48 | 0.20 |
 
 Caveats:
 

@@ -74,7 +74,7 @@ def _load_attacks(family):
     return pool
 
 
-def load_bipia_rows(n_contexts=60, attacks_per_context=2, seed=42, tasks=TASKS):
+def load_bipia_rows(n_contexts=60, attacks_per_context=2, seed=42, tasks=TASKS, extra_clean_tables=0):
     rng = random.Random(seed)
     attacks = {fam: _load_attacks(fam) for fam in {ATTACK_FAMILY[t] for t in tasks}}
 
@@ -84,7 +84,12 @@ def load_bipia_rows(n_contexts=60, attacks_per_context=2, seed=42, tasks=TASKS):
         for split in ("train", "test"):
             path = fetch(f"{BASE}{task}/{split}.jsonl", f"bipia/{task}/{split}.jsonl")
             contexts.extend(_context_text(rec) for rec in _read_jsonl(path))
-        contexts = [c for c in contexts if c.strip()]
+        seen, unique = set(), []   # BIPIA repeats some host documents; keep one copy of each
+        for c in contexts:
+            if c.strip() and c.strip() not in seen:
+                seen.add(c.strip())
+                unique.append(c)
+        contexts = unique
         picked = rng.sample(range(len(contexts)), min(n_contexts, len(contexts)))
         family = ATTACK_FAMILY[task]
 
@@ -99,9 +104,16 @@ def load_bipia_rows(n_contexts=60, attacks_per_context=2, seed=42, tasks=TASKS):
                     f"{group}_a{k}", _insert(text, attack, position, rng), 1, "bipia",
                     f"bipia_{family}", task, group=group,
                     meta=f"category={category}|position={position}"))
+
+        if task == "table" and extra_clean_tables:
+            # Extra host documents with NO poisoned twin: more clean documents without more attacks.
+            # Uses its own random stream, so the picks above (and for the other tasks) do not change.
+            spare = sorted(set(range(len(contexts))) - set(picked))
+            extra = random.Random(f"{seed}-extra-clean-{task}").sample(spare, min(extra_clean_tables, len(spare)))
+            for idx in sorted(extra):
+                group = f"bipia_{task}_{idx:04d}"
+                rows.append(Row.make(f"{group}_clean", contexts[idx], 0, "bipia", "clean", task, group=group))
     return rows
-
-
 if __name__ == "__main__":
     rows = load_bipia_rows(n_contexts=10)
     print_source_counts(rows, "bipia (smoke test, 10 contexts/task)")
