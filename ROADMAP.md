@@ -335,7 +335,7 @@ This list was written from the git history. If something you did is missing or w
 - [x] **1.9** Shared plumbing: score-cache lookup, signal cache, model re-fit helper (3 h, wave 0)
 - [ ] **N1** Diagnose the sentence classifier (is it learning instructions or generator style?) (2.5 h, wave 1)
 - [ ] **4.5** Domain-aware embedding variants (2.5 h, wave 1)
-- [ ] **1.7a** The one-shot final test script (with dry run) (2 h, wave 1)
+- [x] **1.7a** The one-shot final test script (with dry run) (2 h, wave 1)
 - [ ] **4.10** Re-fit fusion with the new signals (1.5 h, wave 2)
 - [ ] **5.3** False-alarm budget sweep (1.5 h, wave 2)
 - [ ] **5.4** Cost-aware cascade (3 h, wave 2)
