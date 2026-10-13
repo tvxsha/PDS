@@ -332,7 +332,7 @@ This list was written from the git history. If something you did is missing or w
 **Core tasks (tick your own box in the PR that finishes the task):**
 
 - [x] **0.4** requirements.txt and .gitignore check (0.5 h, wave 0)
-- [ ] **1.9** Shared plumbing: score-cache lookup, signal cache, model re-fit helper (3 h, wave 0)
+- [x] **1.9** Shared plumbing: score-cache lookup, signal cache, model re-fit helper (3 h, wave 0)
 - [ ] **N1** Diagnose the sentence classifier (is it learning instructions or generator style?) (2.5 h, wave 1)
 - [ ] **4.5** Domain-aware embedding variants (2.5 h, wave 1)
 - [ ] **1.7a** The one-shot final test script (with dry run) (2 h, wave 1)
