@@ -1,0 +1,47 @@
+{
+ "selected": "original",
+ "best_variant": "emb_dom_z",
+ "uses_variant": false,
+ "seeds": [
+  42,
+  43,
+  44
+ ],
+ "rule": "highest mean TRAIN AUC over the seeds; the original stays unless the best variant beats it by 0.03",
+ "mean_train_auc": {
+  "original": 0.6037979756195302,
+  "emb_top3": 0.5971168306251103,
+  "emb_top5": 0.5920170982156323,
+  "emb_dom_max": 0.6044206298934377,
+  "emb_dom_z": 0.610064376850188
+ },
+ "train_auc_per_seed": {
+  "original": [
+   0.6150913944439418,
+   0.6073884716315265,
+   0.5889140607831224
+  ],
+  "emb_top3": [
+   0.6040839872280466,
+   0.5985431182698397,
+   0.5887233863774448
+  ],
+  "emb_top5": [
+   0.5987838851041276,
+   0.5925578809933167,
+   0.5847095285494526
+  ],
+  "emb_dom_max": [
+   0.6180581589255012,
+   0.607304445622245,
+   0.5878992851325672
+  ],
+  "emb_dom_z": [
+   0.6245055392530734,
+   0.6102259653295758,
+   0.595461625967915
+  ]
+ },
+ "gain_of_best": 0.006266401230657803,
+ "note": "No variant is clearly better than the original: the best one (emb_dom_z) gains +0.006 mean TRAIN AUC, below the required 0.03. The original embedding stays."
+}
