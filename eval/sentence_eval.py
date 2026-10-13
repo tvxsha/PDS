@@ -55,7 +55,7 @@ def find_scores_file(seed, override=None):
     if not hits:
         raise SystemExit("Could not find the score cache (a CSV starting with '" + SCORE_HEADER +
                          "'). Run: dir /s /b *.csv   and pass the right one with --scores PATH")
-    pick = [h for h in hits if str(seed) in os.path.basename(h)] or hits
+    pick = [h for h in hits if f"seed{seed}_" in os.path.basename(h)] or hits
     pick.sort(key=os.path.getmtime, reverse=True)
     if len(pick) > 1:
         print("Several score files found, using the newest:", *pick, sep="\n  ")

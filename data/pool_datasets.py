@@ -30,7 +30,8 @@ def _load(name, args):
         return load_pds_local_rows()
     if name == "bipia":
         from data.loaders.bipia import load_bipia_rows
-        return load_bipia_rows(args.bipia_contexts, args.attacks_per_context, args.seed)
+        return load_bipia_rows(args.bipia_contexts, args.attacks_per_context, args.seed,
+                               extra_clean_tables=args.bipia_extra_clean_tables)
     if name == "poisonedrag":
         from data.loaders.poisonedrag import load_poisonedrag_rows
         return load_poisonedrag_rows("nq", args.prag_targets, args.seed, args.beir_zip)
@@ -112,11 +113,12 @@ def main():
     ap.add_argument("--sources", default="pds,bipia,poisonedrag,deepset")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--bipia-contexts", type=int, default=60, help="host docs per BIPIA task")
+    ap.add_argument("--bipia-extra-clean-tables", type=int, default=0,
+                    help="extra clean BIPIA table documents with no poisoned twin")
     ap.add_argument("--attacks-per-context", type=int, default=2)
     ap.add_argument("--prag-targets", type=int, default=40, help="PoisonedRAG targets (5 passages each)")
     ap.add_argument("--beir-zip", default=None, help="path to an already-downloaded BEIR nq.zip")
     args = ap.parse_args()
-
     rows = []
     for name in [s.strip() for s in args.sources.split(",") if s.strip()]:
         print(f"\n=== {name} ===")
