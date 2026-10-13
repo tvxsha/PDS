@@ -12,3 +12,8 @@ env/
 # Phase 2: external datasets are downloaded, never committed
 data/external/
 data/pooled/pooled.jsonl
+# added by task 0.4
+.pytest_cache/
+eval/results/*.npz
+*.log
+freeze_full.txt
