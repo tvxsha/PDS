@@ -580,7 +580,7 @@ def fit_models(seed) -> FittedModels
 - [x] **9.1** Attack taxonomy (1 h, wave 2)
 - [ ] **N2** Block / review / allow policy evaluation (2 h, wave 2)
 - [ ] **N3** Stress-set evaluation under the protocol thresholds (and the blind runs at the freeze) (2 h, wave 2)
-- [ ] **11.3** Venue shortlist (1 h, wave 2)
+- [x] **11.3** Venue shortlist (1 h, wave 2)
 - [ ] **6.1** README refresh (0.5 h, wave 3)
 - [ ] **10.2** Paper: related work update (1.5 h, wave 3)
 - [ ] **10.3** Paper: data and protocol section (1.5 h, wave 3)
