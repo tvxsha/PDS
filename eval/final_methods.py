@@ -127,3 +127,11 @@ for _name in BASE_METHODS:
 @register_method("published classifier")
 def _published(ctx):
     return ctx.published()
+
+
+# ---- the feature set chosen by task 4.10 (eval/results/fusion_v2_candidate.json) -------------------------
+
+@register_method("fusion candidate")
+def _fusion_candidate(ctx):
+    from eval import fusion_v2
+    return fusion_v2.candidate_scores(ctx)
