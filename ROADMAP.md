@@ -331,15 +331,14 @@ This list was written from the git history. If something you did is missing or w
 
 **Core tasks (tick your own box in the PR that finishes the task):**
 
-- [ ] **0.4** requirements.txt and .gitignore check (0.5 h, wave 0)
-- [ ] **1.9** Shared plumbing: score-cache lookup, signal cache, model re-fit helper (3 h, wave 0)
-- [ ] **N1** Diagnose the sentence classifier (is it learning instructions or generator style?) (2.5 h, wave 1)
-- [ ] **4.5** Domain-aware embedding variants (2.5 h, wave 1)
-- [ ] **1.7a** The one-shot final test script (with dry run) (2 h, wave 1)
+- [x] **0.4** requirements.txt and .gitignore check (0.5 h, wave 0)
+- [x] **1.9** Shared plumbing: score-cache lookup, signal cache, model re-fit helper (3 h, wave 0)
+- [x] **N1** Diagnose the sentence classifier (is it learning instructions or generator style?) (2.5 h, wave 1)
+- [x] **4.5** Domain-aware embedding variants (2.5 h, wave 1)
+- [x] **1.7a** The one-shot final test script (with dry run) (2 h, wave 1)
 - [ ] **4.10** Re-fit fusion with the new signals (1.5 h, wave 2)
 - [ ] **5.3** False-alarm budget sweep (1.5 h, wave 2)
 - [ ] **5.4** Cost-aware cascade (3 h, wave 2)
-- [ ] **11.1** University IPR / policy check (1 h, wave 2)
 - [ ] **1.7** Freeze and run the test split once per seed (0.5 h, wave 3)
 - [ ] **10.9** Authorship and acknowledgements (0.25 h, wave 3)
 - [ ] **H4** Bring the updated paper source into the repo (0.25 h, wave 3)
@@ -799,7 +798,7 @@ Report per variant and seed: AUC on train and val overall and per source, TPR at
 
 **Core tasks (tick your own box in the PR that finishes the task):**
 
-- [ ] **0.B** Setup and first PR (1.5 h, wave 0)
+- [x] **0.B** Setup and first PR (1.5 h, wave 0)
 - [ ] **1.3** Latency benchmark (1.5 h, wave 1)
 - [ ] **2.10** deepset loader without `datasets`, and a fourth held-out source (2.5 h, wave 1)
 - [ ] **2.5** Obfuscation generator (1.5 h, wave 1)

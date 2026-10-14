@@ -26,7 +26,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.model_selection import GroupKFold
-
+from eval.protocol import load_split, split_hash
 from detectors.sentence_detector import SentenceInstructionDetector
 
 ALPHA = 0.05  # false-positive budget for the headline metric
@@ -36,16 +36,28 @@ SCORE_HEADER = "id,pattern_score,embedding_score,perplexity_score"
 
 
 def find_scores_file(seed, override=None):
-    """The score cache written by protocol_eval. Found by its column header, so the exact
-    file name does not matter. Use --scores PATH to point at it by hand."""
+    """The score cache written by protocol_eval for THIS seed's split (task 1.9).
+
+    The cache name carries the split hash (pooled_scores_seed42_<hash>.csv), so the right file
+    is the one whose hash equals the hash of data/splits/split_seed<seed>.json. The choice never
+    depends on modification times (after a clone they are all the same). Use --scores PATH to
+    point at a file by hand."""
     if override:
         return override
-    guess = f"eval/results/pooled_scores_seed{seed}.csv"
-    if os.path.exists(guess):
-        return guess
+    try:
+        h = split_hash(load_split(seed))
+    except FileNotFoundError:
+        raise SystemExit(f"data/splits/split_seed{seed}.json not found. Run from the repo root "
+                         f"(the folder that contains data/ and eval/).")
+    exact = f"eval/results/pooled_scores_seed{seed}_{h}.csv"
+    if os.path.exists(exact):
+        return exact
     hits = []
     for root in ("eval", "data"):
-        for path in glob.glob(os.path.join(root, "**", "*.csv"), recursive=True):
+        for path in sorted(glob.glob(os.path.join(root, "**", "*.csv"), recursive=True)):
+            name = os.path.basename(path)
+            if f"seed{seed}_" not in name or h not in name:
+                continue
             try:
                 with open(path, encoding="utf-8") as f:
                     if f.readline().strip().startswith(SCORE_HEADER):
@@ -53,14 +65,11 @@ def find_scores_file(seed, override=None):
             except (OSError, UnicodeDecodeError):
                 pass
     if not hits:
-        raise SystemExit("Could not find the score cache (a CSV starting with '" + SCORE_HEADER +
-                         "'). Run: dir /s /b *.csv   and pass the right one with --scores PATH")
-    pick = [h for h in hits if f"seed{seed}_" in os.path.basename(h)] or hits
-    pick.sort(key=os.path.getmtime, reverse=True)
-    if len(pick) > 1:
-        print("Several score files found, using the newest:", *pick, sep="\n  ")
-    return pick[0]
-
+        raise SystemExit(f"No score cache for seed {seed} with split hash {h} (expected {exact}). "
+                         f"Create it with:  python -m eval.protocol_eval --seed {seed}")
+    if len(hits) > 1:
+        print("Several matching score files found, using the first in alphabetical order:", *hits, sep="\n  ")
+    return hits[0]
 
 def load_docs(seed, roles, scores_path):
     pool = {}

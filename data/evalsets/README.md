@@ -1,0 +1,1 @@
+Separate evaluation sets in Row schema (one JSON object per line, `source` starts with `ext_`); never part of the pool. Load them with `eval.signal_cache.load_evalset(name)`.
