@@ -1,0 +1,13 @@
+\section{Conclusion}
+We built and evaluated a three-signal Poison Detection System for RAG
+pipelines and found that the most useful results were about combination
+and failure, not any single detector's accuracy. A raw-score range mismatch
+produced an 18-point F1 gap between naive (0.79) and calibrated (0.97)
+fusion, confirmed independently by a learned fusion model, and a staged
+pipeline kept that accuracy at 70.5\% lower latency. Red-teaming exposed a
+named failure mode, boilerplate anchoring, which a targeted pattern closes
+but which finer-grained embeddings did not. Most importantly for anyone
+reusing these detectors, the embedding signal flagged every benign
+out-of-domain document, so its in-domain accuracy overstates what it
+measures. All numbers are from a small development set; the planned
+held-out protocol is the necessary next step before any broader claim.

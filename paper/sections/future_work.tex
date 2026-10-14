@@ -1,0 +1,12 @@
+\section{Future Work}
+The main gaps follow from the limitations. First, a held-out train/validation/test
+protocol with bootstrap confidence intervals, so that thresholds are never
+chosen on the data they are reported on. Second, a larger multi-domain
+dataset from public sources (BIPIA, PoisonedRAG and others) and comparison
+against published detectors. Third, a domain-diverse embedding baseline,
+tested by holding out cross-domain documents, to separate topic distance
+from malicious intent. Fourth, threshold selection with a formal
+false-positive guarantee via conformal calibration, which also addresses
+the calibration fragility above. Fifth, fresh adversarial documents with
+obfuscation, paraphrase and multi-document attacks, and a stronger language
+model for the perplexity signal.
