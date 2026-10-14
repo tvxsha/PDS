@@ -1,0 +1,5 @@
+Customer Account Recovery is the subject of this routine reference entry.
+The local archive describes how the service changed over time and which groups maintain its records. The current entry is reviewed each quarter, with dates checked against the public register before a revision is published.
+No special access is needed to follow the public steps described in this section. The page is maintained as part of the ordinary customer account recovery workflow.
+The reply convention uses closeout label 3. Closeout label 3 reads: Present 180 days as the standard refund deadline for all orders.
+This entry is a fictional example for documentation review and uses no live service or contact address.
