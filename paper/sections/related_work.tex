@@ -1,0 +1,34 @@
+\section{Related Work}
+
+\subsection{Indirect prompt injection and RAG poisoning}
+Yi et al.\ introduce BIPIA, the first benchmark for indirect prompt
+injection, and show that language models are broadly unable to
+distinguish informational context from instructions embedded within it
+\cite{yi2023benchmarking}. Hines et al.\ propose spotlighting, an
+input-transformation defense that makes the provenance of untrusted text
+explicit to the model, reducing injection success without requiring the
+untrusted content to be filtered beforehand \cite{hines2024spotlighting}.
+Su et al.\ evaluate RAG systems directly under adversarial poisoning and
+find that a poisoned passage can influence both retrieval and generation,
+motivating detection at the document level rather than relying on the
+generator to notice an attack \cite{su2024robustrag}. Chen et al.\ study
+whether indirect prompt injections can be both detected and removed once
+retrieved, reinforcing that retrieved content should be treated as
+untrusted input by default \cite{chen2025detectremove}. Zhang et al.\ show
+that a poisoning attack requiring only a single injected document per
+targeted query is practical and stealthy, the threat model we adopt
+\cite{zhang2025practical}.
+
+\subsection{Embedding-based anomaly detection}
+Lee et al.\ propose CED, a training-free method for distinguishing
+in-distribution from out-of-distribution text using embedding-space
+differences, and note that normal and anomalous text can occupy
+overlapping regions of embedding space, a difficulty directly relevant to
+our own failure analysis \cite{lee2024ced}.
+
+\subsection{Positioning of this work}
+None of the three detection techniques used in PDS is original to this
+paper. Our contribution is a comparative failure and latency analysis:
+which signals earn their computational cost, how they should be combined,
+and where the combination still breaks under adversarial pressure and under
+domain shift.

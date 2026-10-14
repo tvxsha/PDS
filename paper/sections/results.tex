@@ -1,0 +1,160 @@
+\section{Results and Discussion}
+\label{sec:results}
+
+\subsection{Dataset and protocol}
+The corpus contains 55 clean documents, paragraphs from the READMEs of ten
+open-source projects (Node.js, axios, Redis, FastAPI, pandas, Express,
+Django, NumPy, requests, Flask), and 60 poisoned documents (15 per
+category): direct instruction injection, fabricated system-authority
+messages, on-topic ``corpus poisoning'' with harmful advice and no trigger
+phrases, and garbled text. The embedding detector's reference corpus and
+its evaluation set are disjoint: 70\% of clean documents (38) form the
+trusted baseline, and the remaining 17, with all 60 poisoned documents,
+are scored (77 total). Provenance for every document is logged. Thresholds
+and calibration bounds were chosen on these same 77 documents, so all
+numbers below are development-set results and are optimistic (see
+Section~\ref{sec:limitations}).
+
+\subsection{Fusion method comparison}
+Table \ref{tab:fusion} summarizes the four fusion strategies.
+
+\begin{table}[t]
+\caption{Fusion method comparison (77-document development set)}
+\label{tab:fusion}
+\centering
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Method & Precision & Recall & F1 \\
+\midrule
+Naive fixed fusion & 1.00 & 0.65 & 0.79 \\
+Learned fusion (raw scores) & 0.86 & 0.90 & 0.88 \\
+Calibrated fixed fusion & 0.98 & 0.97 & 0.97 \\
+Learned fusion (calibrated) & 0.97 & 0.98 & 0.98 \\
+Staged pipeline & 0.94 & 1.00 & 0.97 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The gap between naive and calibrated fusion is explained by score range.
+The embedding detector's raw scores occupied $[0.180, 0.430]$, while the
+pattern and perplexity detectors each spanned the full $[0,1]$ range.
+Unweighted averaging therefore compresses the embedding detector by
+construction, though a per-detector threshold sweep shows it is the
+strongest signal (F1 = 0.92 alone at its best threshold, against 0.55 and
+0.49 for pattern and perplexity). Calibrating each detector to $[0,1]$
+before averaging raises F1 from 0.79 to 0.97 with no change to any
+detector's scoring logic.
+
+The learned fusion corroborates this. A logistic regression on raw scores
+reaches only F1 = 0.88 and gives the embedding detector the smallest
+coefficient of the three (1.09, against 1.82 and 1.51) despite its being
+the most discriminative signal. Trained on calibrated inputs the same model
+reaches F1 = 0.98 and ranks the embedding detector first (coefficient
+2.67). A hand-derived calibration argument and a cross-validated model thus
+converge on the same conclusion.
+
+\subsection{Failure map by attack category}
+Table \ref{tab:failuremap} reports, per category, the fraction of poisoned
+documents caught by each detector at its own best threshold, and by
+calibrated fusion at threshold 0.20.
+
+\begin{table}[t]
+\caption{Per-category detection rate}
+\label{tab:failuremap}
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Category & Pattern & Embed. & Perplex. & Fusion \\
+\midrule
+Injection & 67\% & 73\% & 33\% & 100\% \\
+Authority & 73\% & 93\% & 0\% & 93\% \\
+Corpus poisoning & 13\% & 100\% & 0\% & 93\% \\
+Garbled/perplexity & 0\% & 100\% & 100\% & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No single detector covers every category, the central argument for an
+ensemble. Corpus poisoning, harmful advice in ordinary technical language
+with no override phrases, is caught almost entirely by the embedding
+detector. As the cross-domain result below shows, part of that success is
+likely topic distance from the README baseline rather than detection of
+malicious intent.
+
+\subsection{A regex gap found and closed by failure analysis}
+Inspection of documents missed by calibrated fusion identified two
+injection documents containing ``ignore \textit{your} previous
+instructions,'' which the original regular expression did not match because
+it allowed only one optional modifier before ``instructions.'' Generalizing
+the pattern to accept a possessive pronoun raised injection-category
+detection from 87\% to 100\% and calibrated fusion F1 from 0.95 to 0.97,
+verified by re-running the full corpus to confirm no new false positives.
+
+\subsection{Staged pipeline and latency}
+Running all three detectors on every document costs 357.4\,ms on average in
+our latest run. The staged pipeline (pattern, then embedding, then
+perplexity only if inconclusive) costs 105.3\,ms, a 70.5\% reduction, with
+F1 = 0.97. The embedding stage ran on 70\% of documents and the perplexity
+stage on 17\%. The most accurate single signal need not be the most
+expensive to deploy, provided cheaper signals first resolve the documents
+they can. This is a replay of latencies logged in one evaluation run; an
+earlier run gave 72.5\%, so the figure is indicative rather than precise.
+
+\subsection{Adversarial red-teaming}
+We wrote ten documents meant to defeat all three detectors: each avoids
+the original pattern trigger phrases, is fluent to avoid a high perplexity
+score, and imitates README vocabulary to keep embedding distance small.
+Calibration bounds were frozen from the original evaluation rather than
+recomputed, to avoid circularity. In the first round, nine of ten were
+caught. The evasion, \texttt{adv\_010}, opened with ``this project is
+distributed under the MIT license'' and then described build artifacts
+published with default demo credentials. We call this
+\textit{boilerplate anchoring}: prefixing a malicious clause with text so
+common in the reference domain that it pulls the whole-document embedding
+toward the baseline and dilutes the payload (combined score 0.106 against
+a threshold of 0.15). We did not find prior work describing this effect in
+this setting.
+
+We then added two credential-exposure patterns (default/preconfigured
+credentials, hard-coded secrets). They match three of the ten adversarial
+documents and none of the 55 clean or 12 cross-domain documents, and all
+ten are now caught (\texttt{adv\_010}: 0.406). Because the patterns were
+written after reading \texttt{adv\_010}'s wording, this is a fix for a
+found gap, \textbf{not} independent evidence of robustness; the embedding
+and perplexity detectors alone still miss that document.
+
+\subsection{Calibration fragility}
+\label{sec:calibration-fragility}
+Min-max bounds for the embedding detector are set by one document at each
+extreme. Removing the single document that sets a bound shifts the lower
+bound from 0.180 to 0.205 and the whole dataset's normalized embedding
+scores by 2.1\% on average, roughly 1.8x more than under 5th/95th-percentile
+bounds (1.1\%). The pattern and perplexity detectors are unaffected, since
+their scores tie at 0 and 1. More stable calibration is not automatically
+better detection: under quantile bounds \texttt{adv\_010} receives a lower
+embedding contribution (0.215) than under min-max (0.318), so a switch
+would require re-tuning the threshold.
+
+\subsection{Cross-domain false positives}
+Twelve benign documents (HR, support and office policies) were scored with
+the same baseline, frozen bounds and threshold. All 12 were flagged, each
+driven mainly by the embedding detector. Their median embedding score
+(0.37) is essentially that of the poisoned documents (0.36) and well above
+that of in-domain clean documents (0.27); only 1 of 17 held-out in-domain
+clean documents was flagged at threshold 0.20. The baseline contains only
+software READMEs, so any document in a different style looks anomalous even
+when harmless. The embedding detector therefore partly measures distance
+from the baseline domain, not malicious intent, and the in-domain F1 of
+0.97 must not be read as domain-general.
+
+\subsection{Negative result: segment-level scoring}
+To address boilerplate anchoring we scored each sentence independently with
+three aggregations (maximum, a blend of maximum and mean, and a high-threshold
+veto). None helped: maximum aggregation raised clean false positives from 4
+to 9 of 17 at the original threshold, and after re-tuning the peak F1 values
+were 0.90, 0.90 and 0.92, none above the 0.92 of the unmodified
+document-level embedding detector. The highest segment score of
+\texttt{adv\_010} (0.319) was below the maximum segment score of 5 of 17
+clean documents. Sentence-level scores are noisier than the document-level
+average, so the anchoring weakness is better addressed at the pattern level
+or by a different calibration scheme than by finer-grained embeddings.

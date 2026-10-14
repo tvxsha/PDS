@@ -341,7 +341,7 @@ This list was written from the git history. If something you did is missing or w
 - [ ] **5.4** Cost-aware cascade (3 h, wave 2)
 - [ ] **1.7** Freeze and run the test split once per seed (0.5 h, wave 3)
 - [ ] **10.9** Authorship and acknowledgements (0.25 h, wave 3)
-- [ ] **H4** Bring the updated paper source into the repo (0.25 h, wave 3)
+- [x] **H4** Bring the updated paper source into the repo (0.25 h, wave 3)
 - [ ] **10.5** Paper: held-out (test) results section (2 h, wave 3)
 - [ ] **10.6** Paper: mitigations and what they cost (2 h, wave 3)
 - [ ] **10.7** Paper: abstract, introduction, conclusion (1.5 h, wave 3)

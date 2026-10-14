@@ -17,3 +17,13 @@ data/pooled/pooled.jsonl
 eval/results/*.npz
 *.log
 freeze_full.txt
+# LaTeX build files (task H4)
+paper/*.aux
+paper/*.out
+paper/*.toc
+paper/*.bbl
+paper/*.blg
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.pdf
