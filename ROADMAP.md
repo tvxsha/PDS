@@ -577,7 +577,7 @@ def fit_models(seed) -> FittedModels
 - [ ] **3.7** Contamination check of the pretrained models (1 h, wave 1)
 - [ ] **4.3** Manual error analysis (2 h, wave 1)
 - [ ] **4.4** Boilerplate subtraction for the embedding detector (3 h, wave 1)
-- [ ] **9.1** Attack taxonomy (1 h, wave 2)
+- [x] **9.1** Attack taxonomy (1 h, wave 2)
 - [ ] **N2** Block / review / allow policy evaluation (2 h, wave 2)
 - [ ] **N3** Stress-set evaluation under the protocol thresholds (and the blind runs at the freeze) (2 h, wave 2)
 - [ ] **11.3** Venue shortlist (1 h, wave 2)
