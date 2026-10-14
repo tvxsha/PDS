@@ -340,12 +340,9 @@ def _variant_scorer(ctx, name):
     return scorer
 
 
-def candidate_scores(ctx):
-    """(train out-of-fold scores, eval scores) of the 4.10 candidate for an eval.final_methods Context."""
-    cand = load_candidate()
-    if ctx.final and not cand.get("complete", True):
-        raise SystemExit("eval/results/fusion_v2_candidate.json is provisional (missing: "
-                         + ", ".join(cand.get("missing_inputs", [])) + "). Re-run  python -m eval.fusion_v2  after those tasks are merged.")
+def candidate_columns(ctx, cand):
+    """({feature: train array}, {feature: eval array}) for the columns of the candidate, for an eval.final_methods Context.
+    The train values of the sentence classifier are out-of-fold. (Task 5.4 reads the same columns for its stages.)"""
     feats = cand["features"]
     fm = ctx.fitted()
     tr = {"pattern": np.array([d["pat"] for d in ctx.train]), "embedding": np.array([d["emb"] for d in ctx.train]),
@@ -356,8 +353,18 @@ def candidate_scores(ctx):
         tr["published"], ev["published"] = ctx.published()
     for name in cand.get("embedding_variants", []):
         tr[name], ev[name] = ctx.signal(name, _variant_scorer(ctx, name))
+    return tr, ev
+
+
+def candidate_scores(ctx):
+    """(train out-of-fold scores, eval scores) of the 4.10 candidate for an eval.final_methods Context."""
+    cand = load_candidate()
+    if ctx.final and not cand.get("complete", True):
+        raise SystemExit("eval/results/fusion_v2_candidate.json is provisional (missing: "
+                         + ", ".join(cand.get("missing_inputs", [])) + "). Re-run  python -m eval.fusion_v2  after those tasks are merged.")
+    tr, ev = candidate_columns(ctx, cand)
     groups = np.array([d["grp"] for d in ctx.train])
-    return fit_and_score(feats, tr, ev, ctx.y_train, groups)
+    return fit_and_score(cand["features"], tr, ev, ctx.y_train, groups)
 
 
 # --------------------------------------------------------------------------

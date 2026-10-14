@@ -135,3 +135,11 @@ def _published(ctx):
 def _fusion_candidate(ctx):
     from eval import fusion_v2
     return fusion_v2.candidate_scores(ctx)
+
+
+# ---- the cost-aware cascade of task 5.4 (an extra: needs eval/results/latency_benchmark.json from task 1.3) ------
+
+@register_extra("cascade")
+def _cascade(ctx):
+    from eval import cascade_eval
+    return cascade_eval.cascade_extra(ctx)
