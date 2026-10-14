@@ -1,0 +1,28 @@
+{
+ "features": [
+  "pattern",
+  "embedding",
+  "perplexity",
+  "sentence"
+ ],
+ "embedding_variant": "original",
+ "uses_published": false,
+ "feature_set": "F1",
+ "embedding_variants": [],
+ "complete": false,
+ "missing_inputs": [
+  "4.4"
+ ],
+ "seeds": [
+  42,
+  43,
+  44
+ ],
+ "rule": "highest mean out-of-fold TRAIN AUC over seeds 42 to 44; sets less than 0.005 below the best are tied and the one with fewer features and cheaper signals wins (F0, F1, F2, F3, F5, F4)",
+ "mean_train_auc": {
+  "F0": 0.7631974697398641,
+  "F1": 0.9158150953802933,
+  "F4": 0.9152683876916977
+ },
+ "note": "PROVISIONAL: task 4.4 had not delivered its result file when this was written. Run `python -m eval.fusion_v2` again after it is merged."
+}
