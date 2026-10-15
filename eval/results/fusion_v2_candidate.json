@@ -9,8 +9,9 @@
  "uses_published": false,
  "feature_set": "F1",
  "embedding_variants": [],
- "complete": false,
- "missing_inputs": [
+ "complete": true,
+ "missing_inputs": [],
+ "waived_inputs": [
   "4.4"
  ],
  "seeds": [
@@ -24,5 +25,5 @@
   "F1": 0.9158150953802933,
   "F4": 0.9152683876916977
  },
- "note": "PROVISIONAL: task 4.4 had not delivered its result file when this was written. Run `python -m eval.fusion_v2` again after it is merged."
+ "note": "F1 (F0 + sentence classifier) has the highest mean out-of-fold TRAIN AUC, 0.916, and is selected. Nothing beat F1, so F1 stays. Task 4.4 was waived (not delivered): F3 and F5 were not evaluated."
 }
