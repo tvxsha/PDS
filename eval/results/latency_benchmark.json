@@ -1,0 +1,178 @@
+{
+ "hardware": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+  "logical_cores": 18,
+  "threads_requested": 4,
+  "power": "plugged in",
+  "python": "3.14.3",
+  "date": "2026-10-15",
+  "torch": "2.14.0",
+  "transformers": "5.16.1",
+  "sentence-transformers": "6.0.1",
+  "scikit-learn": "1.9.0",
+  "numpy": "2.5.2",
+  "torch_threads": 4
+ },
+ "seed": 42,
+ "n": 200,
+ "repeats": 3,
+ "detectors": {
+  "pattern": {
+   "median_ms": 0.11579995043575764,
+   "p95_ms": 0.8641900378279378,
+   "mean_ms": 0.24888900108635426
+  },
+  "embedding": {
+   "median_ms": 31.14015015307814,
+   "p95_ms": 101.99948993977159,
+   "mean_ms": 46.233768024249
+  },
+  "perplexity": {
+   "median_ms": 200.0640999758616,
+   "p95_ms": 2716.012750030495,
+   "mean_ms": 796.1160489928443
+  },
+  "sentence classifier": {
+   "median_ms": 1.60245003644377,
+   "p95_ms": 3.4413650864735232,
+   "mean_ms": 1.857810503570363
+  },
+  "published classifier": {
+   "median_ms": 344.4536499446258,
+   "p95_ms": 1339.2914648982692,
+   "mean_ms": 578.0034334980883
+  },
+  "ours3": {
+   "median_ms": 227.58669999893755,
+   "p95_ms": 2545.585755060891,
+   "mean_ms": 818.5360084869899
+  },
+  "ours3 + sentence": {
+   "median_ms": 231.199000030756,
+   "p95_ms": 2614.585210045334,
+   "mean_ms": 817.5787579955067
+  }
+ },
+ "by_length": {
+  "pattern": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 0.06089999806135893,
+    "p95_ms": 0.15887503977864978
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 0.3488000947982073,
+    "p95_ms": 1.0347400559112427
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 0.8372999727725983,
+    "p95_ms": 1.7989099258556962
+   }
+  },
+  "embedding": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 24.079550057649612,
+    "p95_ms": 37.48640498379245
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 72.72129994817078,
+    "p95_ms": 115.58812018483876
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 86.96440001949668,
+    "p95_ms": 111.20572006329893
+   }
+  },
+  "perplexity": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 157.14180003851652,
+    "p95_ms": 266.98572481982404
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 1532.7349998988211,
+    "p95_ms": 2949.492310080677
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 2561.0297000966966,
+    "p95_ms": 3274.9816999770683
+   }
+  },
+  "sentence classifier": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 1.4067001175135374,
+    "p95_ms": 2.646209916565567
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 1.8607999663800001,
+    "p95_ms": 3.797279926948249
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 2.48149991966784,
+    "p95_ms": 4.649089998565614
+   }
+  },
+  "published classifier": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 287.6572000095621,
+    "p95_ms": 402.8356949449517
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 716.7485000099987,
+    "p95_ms": 1722.8037698660046
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 1223.7245999276638,
+    "p95_ms": 4321.265429886989
+   }
+  },
+  "ours3": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 179.79429988190532,
+    "p95_ms": 317.8102249745279
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 1580.095199868083,
+    "p95_ms": 2872.0464000711218
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 2429.869299987331,
+    "p95_ms": 3277.5607799412664
+   }
+  },
+  "ours3 + sentence": {
+   "under 500 characters": {
+    "n": 122,
+    "median_ms": 173.2848499668762,
+    "p95_ms": 332.793110073544
+   },
+   "500 to 2,000 characters": {
+    "n": 63,
+    "median_ms": 1577.9459001496434,
+    "p95_ms": 2939.685189980082
+   },
+   "over 2,000 characters": {
+    "n": 15,
+    "median_ms": 2421.8353999312967,
+    "p95_ms": 2945.7709899870674
+   }
+  }
+ }
+}

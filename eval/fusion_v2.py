@@ -34,6 +34,7 @@ SEEDS = (42, 43, 44)
 TIE = 0.005
 SEL_45 = "eval/results/embedding_variants_selected.json"
 SEL_44 = "eval/results/embedding_boilerplate_selected.json"
+WAIVED = "waived"      # status of task 4.4 when --waive-44 is given and its result file does not exist
 CANDIDATE = "eval/results/fusion_v2_candidate.json"
 ORIGINAL = "original"
 BASE_FEATURES = ("pattern", "embedding", "perplexity", "sentence", "published")
@@ -143,13 +144,14 @@ def candidate_json(sel, v45, v44, status44):
     feats = feature_list(sel["selected"], v45, v44)
     variants = [f for f in feats if f not in BASE_FEATURES]
     missing = ["4.4"] if status44 == "missing" else []
+    waived = ["4.4"] if status44 == WAIVED else []
     return {"features": feats, "embedding_variant": " + ".join(variants) if variants else ORIGINAL,
             "uses_published": "published" in feats, "feature_set": sel["selected"], "embedding_variants": variants,
-            "complete": not missing, "missing_inputs": missing, "seeds": list(SEEDS), "rule": RULE,
+            "complete": not missing, "missing_inputs": missing, "waived_inputs": waived, "seeds": list(SEEDS), "rule": RULE,
             "mean_train_auc": sel["mean_train_auc"],
             "note": ("PROVISIONAL: task 4.4 had not delivered its result file when this was written. Run "
-                     "`python -m eval.fusion_v2` again after it is merged." if missing else conclusion(sel))}
-
+                     "`python -m eval.fusion_v2` again after it is merged." if missing else
+                     conclusion(sel) + (" Task 4.4 was waived (not delivered): F3 and F5 were not evaluated." if waived else ""))}
 
 # --------------------------------------------------------------------------
 # one seed
@@ -298,6 +300,9 @@ def describe_inputs(status45, v45, status44, v44):
         lines.append(f"Task 4.4 selected the embedding variant `{v44}`: F3 uses it.")
     elif status44 == ORIGINAL:
         lines.append("Task 4.4 kept the original embedding (eval/results/embedding_boilerplate_selected.json): F3 is identical to F1 and is not run.")
+    elif status44 == WAIVED:
+        lines.append("**Task 4.4 was not delivered and is waived (--waive-44): F3 and F5 are not run, and the paper must say that the "
+                     "boilerplate-subtraction variants were not tested.** The candidate file is marked complete with this waiver recorded.")
     else:
         lines.append("**Task 4.4 has not delivered eval/results/embedding_boilerplate_selected.json yet: F3 and F5 are not run, and the "
                      "candidate file is marked provisional.** Run this script again once 4.4 is merged.")
@@ -372,11 +377,15 @@ def candidate_scores(ctx):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=None, help="one seed only (no choice is made); default: 42, 43 and 44")
+    ap.add_argument("--waive-44", action="store_true",
+                    help="task 4.4 was not delivered: continue without F3 and F5 and mark the candidate complete (recorded in the file)")
     args = ap.parse_args()
     seeds = SEEDS if args.seed is None else (args.seed,)
 
     status45, v45 = read_selection(SEL_45)
     status44, v44 = read_selection(SEL_44)
+    if args.waive_44 and status44 == "missing":
+        status44 = WAIVED
     inputs = describe_inputs(status45, v45, status44, v44)
     print("\n".join(inputs), flush=True)
 

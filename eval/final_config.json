@@ -14,5 +14,5 @@
     "LR + sentence classifier",
     "published classifier"
   ],
-  "extras": []
+  "extras": ["cascade"]
 }
