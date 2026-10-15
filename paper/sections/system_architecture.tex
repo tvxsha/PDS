@@ -14,7 +14,7 @@ one laptop CPU (four threads, plugged in, 200 documents, three repeats).
 \subsection{Detectors}
 \paragraph{A: instruction pattern matching.}
 A regular-expression detector scans the text for known override phrases
-(variants of ``ignore previous instructions,'' fake system-authority tags such
+(variants of ``ignore previous instructions''~\cite{perez2022ignore}, fake system-authority tags such
 as \texttt{[SYSTEM OVERRIDE]}, credential-exfiltration phrasing, and, after our
 red-teaming, phrasing that exposes default or hard-coded credentials). Each
 pattern $k$ carries a fixed weight $u_k\in[0,1]$ and the score is the largest
@@ -27,7 +27,8 @@ where $m_k(d)=1$ if pattern $k$ matches $d$. It is effectively free (median
 \resLatMedPat\,ms) but blind to any attack that does not use a known phrasing.
 
 \paragraph{B: embedding anomaly.}
-A sentence-embedding model $e(\cdot)$ (all-MiniLM-L6-v2) encodes the document
+A sentence-embedding model $e(\cdot)$ (all-MiniLM-L6-v2, loaded through the
+sentence-transformers library~\cite{reimers2019sbert}) encodes the document
 and a reference corpus $\mathcal{R}$ of trusted documents (the baseline role of
 the split). A document far from every trusted example scores as more anomalous,
 \begin{equation}
@@ -38,7 +39,7 @@ with $\operatorname{clip}(x,0,1)=\min\{\max\{x,0\},1\}$. Median cost is
 \resLatMedEmb\,ms.
 
 \paragraph{C: perplexity.}
-GPT-2 computes the perplexity of the first $N\le 1{,}024$ tokens $x_1,\dots,x_N$,
+GPT-2~\cite{radford2019gpt2} computes the perplexity of the first $N\le 1{,}024$ tokens $x_1,\dots,x_N$,
 \begin{equation}
     \mathrm{PPL}(d)=\exp\!\Big(-\frac{1}{N-1}\sum_{t=2}^{N}\log p\big(x_t\mid x_{<t}\big)\Big),
     \label{eq:ppl}
@@ -58,7 +59,7 @@ expensive signal (median \resLatMedPpl\,ms, 95th percentile
 
 \paragraph{D: sentence-level instruction classifier.}
 The document is split into a set $U(d)$ of sentence-like units. A logistic
-regression over word and bigram TF-IDF features and a few hand-written cues
+regression (scikit-learn~\cite{pedregosa2011sklearn}) over word and bigram TF-IDF features and a few hand-written cues
 (second-person address, modal verbs such as ``must'' or ``please'') maps every
 unit to a probability, and the highest unit score is the document score, so a
 short instruction hidden in a long document is not diluted,
@@ -74,7 +75,8 @@ the model learns the wording that appears only in attacks. Median cost is
 \resLatMedSen\,ms.
 
 \paragraph{E: published classifier.}
-For comparison we run a public prompt-injection classifier
+For comparison we run a public prompt-injection classifier, a fine-tuned
+DeBERTa-v3~\cite{he2023debertav3} model
 (\texttt{protectai/\allowbreak deberta-v3-base-\allowbreak prompt-injection-v2})~\cite{protectai2024deberta}.
 It reads at most 512 tokens, so a document is cut into overlapping windows
 $W(d)$ (at most eight) and the score is the margin of the most suspicious one,
@@ -136,8 +138,10 @@ tuned on validation or test.
 
 \subsection{Cost-aware cascade}
 Running all four signals on every document costs $\sum_i c_i$, where $c_i$ is the
-median time of stage $i$, and perplexity alone is most of it. We therefore
-measure two cascades whose stages are ordered by median cost (pattern, sentence
+median time of stage $i$, and perplexity alone is most of it. Spending little on
+easy cases and more on hard ones is an old idea in vision, where cascades of
+increasingly costly classifiers made face detection fast~\cite{viola2001cascade}. We
+therefore measure two cascades whose stages are ordered by median cost (pattern, sentence
 classifier, embedding, perplexity). In the \emph{OR cascade} (design A), stage
 $i$ flags a document if $s_i(d)>\theta_i$ and otherwise passes it on. The budget
 is split across stages, $\sum_i\alpha_i=\alpha$, each $\theta_i$ is the

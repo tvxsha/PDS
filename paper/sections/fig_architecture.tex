@@ -4,24 +4,24 @@
 \begin{tikzpicture}[
   font=\footnotesize,
   >=Stealth,
-  box/.style={draw, rounded corners=2pt, minimum height=0.8cm, align=center, fill=blue!7, inner sep=3pt},
+  box/.style={draw=black, fill=white, rounded corners=2pt, minimum height=0.8cm, align=center, inner sep=3pt},
   det/.style={box, minimum width=5.4cm},
-  ext/.style={box, minimum width=5.4cm, dashed, fill=gray!10},
-  proc/.style={box, fill=orange!12, minimum width=3.3cm},
-  io/.style={draw, rounded corners=6pt, align=center, fill=green!8, minimum height=0.8cm, inner sep=4pt},
+  ext/.style={box, minimum width=5.4cm, dashed},
+  proc/.style={box, fill=gray!15, minimum width=3.3cm},
+  io/.style={draw=black, fill=white, rounded corners=6pt, align=center, minimum height=0.8cm, inner sep=4pt, line width=0.9pt},
   arr/.style={->, thick},
   darr/.style={->, thick, dashed},
-  note/.style={font=\scriptsize\itshape, text=black!65}]
+  note/.style={font=\scriptsize\itshape, text=black!75}]
 \node[io] (doc) at (0,0) {retrieved\\document $d$};
 \node[det] (A) at (5.4, 2.7) {\textbf{A} pattern bank\\[-1pt]{\scriptsize $s_A$, median \resLatMedPat\,ms}};
 \node[det] (B) at (5.4, 1.0) {\textbf{B} embedding anomaly\\[-1pt]{\scriptsize $s_B$, nearest trusted document, median \resLatMedEmb\,ms}};
 \node[det] (C) at (5.4,-0.7) {\textbf{C} perplexity (GPT-2)\\[-1pt]{\scriptsize $s_C$, median \resLatMedPpl\,ms}};
 \node[det] (D) at (5.4,-2.4) {\textbf{D} sentence classifier\\[-1pt]{\scriptsize $s_D$, median \resLatMedSen\,ms}};
 \node[ext] (E) at (5.4,-4.3) {\textbf{E} published classifier (comparison)\\[-1pt]{\scriptsize margin, median \resLatMedPub\,ms}};
-\node[proc] (F) at (11.6, 0.15) {logistic regression\\[-1pt]{\scriptsize class-balanced, $C{=}1$}\\[-1pt]$s(d)=\sigma(\mathbf{w}^{\top}\mathbf{s}+b)$};
+\node[proc] (F) at (11.6, 0.15) {logistic regression\\[-1pt]{\scriptsize class-balanced, $C{=}1$}\\[2pt]$s(d)=\sigma(\mathbf{w}^{\top}\mathbf{s}+b)$};
 \node[proc] (T) at (15.8, 0.15) {threshold $\tau_\alpha$\\[-1pt]{\scriptsize quantile of train clean scores}};
 \node[io] (out) at (19.6, 0.15) {allow\\ or flag};
-\node[box, fill=yellow!15, minimum width=3.3cm] (TR) at (11.6,-3.2) {training role\\[-1pt]{\scriptsize fits $\mathbf{w}$, $b$, D, $\tau_\alpha$}};
+\node[box, dashed, minimum width=3.3cm] (TR) at (11.6,-3.2) {training role\\[-1pt]{\scriptsize fits $\mathbf{w}$, $b$, D, $\tau_\alpha$}};
 \foreach \n in {A,B,C,D,E}{\draw[arr] (doc.east) -- ++(0.9,0) |- (\n.west);}
 \foreach \n in {A,B,C,D}{\draw[arr] (\n.east) -- ++(0.9,0) |- ($(F.west)+(0,0)$);}
 \draw[arr] (F.east) -- (T.west);

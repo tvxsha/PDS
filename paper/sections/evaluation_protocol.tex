@@ -7,7 +7,8 @@ same documents they were reported on. We replaced that setup with a pooled set
 of 2{,}291 documents (1{,}143 clean, 1{,}148 poisoned) from three origins
 (Table~\ref{tab:pool}). BIPIA~\cite{yi2023benchmarking} supplies clean
 documents and poisoned copies with an inserted instruction; PoisonedRAG~\cite{zou2024poisonedrag}
-supplies clean Natural Questions passages~\cite{kwiatkowski2019nq} and
+supplies clean Natural Questions passages~\cite{kwiatkowski2019nq}, taken from
+the BEIR collection~\cite{thakur2021beir}, and
 poisoned passages written to steer an answer, usually without any trigger
 phrase; and our own development documents supply a small in-house source, a
 set of cross-domain clean documents and ten hand-written adversarial documents.
@@ -48,7 +49,9 @@ documents), \emph{validation} (373) and \emph{test} (373). We repeat the split
 with three seeds (42, 43, 44). The seeds draw different group assignments from
 the same pool, so the three test sets overlap heavily; agreement across seeds
 shows that results are stable to the split, not that they are independent
-replications.
+replications. Grouped splits, a held-out role scored once and precision at low
+prevalence respond to pitfalls that Arp et al.\ list for machine learning in
+security: sampling bias, data snooping and the base-rate fallacy~\cite{arp2022dos}.
 
 \subsection{Operating points and metrics}
 A detector is only useful at a stated false-alarm rate, so we fix the operating
@@ -67,7 +70,7 @@ documents we report the recall and the realised false-alarm rate,
     \end{gathered}
     \label{eq:tprfpr}
 \end{equation}
-with 95\% intervals from a group bootstrap: in each of $B=1{,}000$ replicates we
+with 95\% intervals from a group bootstrap~\cite{efron1979bootstrap}: in each of $B=1{,}000$ replicates we
 draw whole groups with replacement, recompute both rates, and report the 2.5th
 and 97.5th percentiles,
 \begin{equation}
@@ -86,12 +89,13 @@ documents is poisoned, the precision of an alert follows from Bayes' rule,
 \end{equation}
 where $n_0$ is the number of clean evaluation documents and $\mathrm{FPR}^{*}$ is
 the observed false-alarm rate, or $3/n_0$ when no false alarm was observed
-(the rule-of-three upper bound), so a method with no observed false alarm is
+(the rule-of-three upper bound~\cite{hanley1983zero}), so a method with no observed false alarm is
 not flattered. The expected number of
 alerts among $N$ retrieved documents is $N\,[\pi\,\mathrm{TPR}+(1-\pi)\,\mathrm{FPR}]$,
 of which a share $1-\mathrm{Prec}(\pi)$ are false. We quote precision at
 $\pi=1\%$ and $0.1\%$ because the alert load, not recall alone, decides whether
-a detector can be deployed. These values are computed from the rates above; they
+a detector can be deployed; Axelsson made the same point for intrusion
+detection~\cite{axelsson2000base}. These values are computed from the rates above; they
 are not measured on a stream with that share.
 
 \subsection{One-shot test discipline}

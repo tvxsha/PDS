@@ -46,14 +46,14 @@ OUT_DIR = "paper/figures"
 
 COL1, COL2 = 3.45, 7.1                              # IEEE column and page width, inches
 
-# Okabe-Ito colours (safe for colour-vision deficiency), plus a line style / hatch so grey-scale prints still work
+# Okabe-Ito colours (safe for colour-vision deficiency); lines also differ in style. The last field (hatch) is no longer used.
 STYLE = {
     "pattern bank":               ("Pattern bank",     "#000000", "-",  "o", ""),
     "embedding":                  ("Embedding",        "#E69F00", "--", "s", "//"),
     "perplexity":                 ("Perplexity",       "#56B4E9", "-.", "^", "\\\\"),
-    "naive average of the 3":     ("Naive average",    "#999999", ":",  "v", ".."),
+    "naive average of the 3":     ("Naive average",    "#6A3D9A", ":",  "v", ".."),
     "sentence classifier":        ("Sentence clf.",    "#009E73", "-",  "D", "xx"),
-    "LR on the 3 current scores": ("LR (A-C)",         "#CC79A7", "--", "P", "++"),
+    "LR on the 3 current scores": ("LR (A-C)",         "#882255", "--", "P", "++"),
     "LR + sentence classifier":   ("LR + sentence",    "#D55E00", "-",  "*", ""),
     "published classifier":       ("Published clf.",   "#0072B2", "-.", "X", "oo"),
 }
@@ -142,9 +142,8 @@ def fig_source(seeds, cfg, out, dry):
             mean = np.array([np.mean(v) for v in vals])
             err = np.clip(np.array([[np.mean(v) - np.min(v) for v in vals], [np.max(v) - np.mean(v) for v in vals]]), 0, None)
             x = np.arange(len(groups)) + (j - (len(methods) - 1) / 2) * w
-            _, color, _, _, hatch = STYLE[m]
-            ax.bar(x, mean, w * 0.92, color=color, edgecolor="white", linewidth=0.4, hatch=hatch,
-                   alpha=0.95, label=label(m))
+            _, color, _, _, _ = STYLE[m]
+            ax.bar(x, mean, w * 0.92, color=color, edgecolor="white", linewidth=0.4, label=label(m))
             ax.errorbar(x, mean, yerr=err, fmt="none", ecolor=INK, elinewidth=0.5, capsize=1.2)
         ax.set_ylabel(ylab)
         ax.set_ylim(0, 1.0 if which == 0 else None)

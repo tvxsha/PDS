@@ -12,7 +12,8 @@ allowed to influence $M$.
 We assume an attacker who can introduce or modify at least one document that is
 later retrieved, for example by contributing to a corpus with open ingestion (a
 wiki, a shared documentation repository, a user-submitted knowledge base) or by
-having a page indexed by a web-scraped source. Prior work shows that a single
+having a page indexed by a web-scraped source; poisoning web-scale sources has
+been shown to be practical~\cite{carlini2024poisoning}. Prior work shows that a single
 injected passage per targeted query can be enough~\cite{zhang2025practical}, so
 we do not assume control of a large share of the corpus. The attacker's goal is
 to make $M$ follow an injected instruction, leak information or give an

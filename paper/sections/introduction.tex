@@ -1,14 +1,14 @@
 \section{Introduction}
 
 Retrieval-augmented generation systems answer a query by retrieving documents
-from a corpus and conditioning a language model's response on their contents.
-The architecture is now standard in production assistants, but it inherits a
+from a corpus and conditioning a language model's response on their contents
+\cite{lewis2020rag}. The architecture is now standard in production assistants, but it inherits a
 quiet assumption: that every document in the corpus is trustworthy. When that
 assumption fails the result is \textit{knowledge poisoning}, the deliberate
 insertion of a document designed to manipulate downstream generation. The concern
 is not hypothetical: indirect prompt injection through externally sourced content
 has been demonstrated against production LLM-integrated applications
-\cite{yi2023benchmarking}, and attacks that inject a single malicious passage per
+\cite{greshake2023indirect,yi2023benchmarking}, and attacks that inject a single malicious passage per
 targeted query have been shown to be practical at scale \cite{zhang2025practical}.
 
 A poison detection system (PDS) sits between the retriever and the generator and
