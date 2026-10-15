@@ -12,14 +12,16 @@ alongside what is known about it.
 
 \paragraph{Data provenance.}
 Clean and poisoned documents come from public benchmarks (BIPIA and PoisonedRAG,
-with passages from Natural Questions) and from public open-source READMEs;
-sources of the READMEs are logged in \texttt{data/\_provenance/} and the licences
-of the benchmarks in \texttt{docs/contamination.md}. We use them for
-research only and do not redistribute them: the pooled document file is rebuilt
-from the sources. Poisoned and adversarial in-house documents were written by the
-team for this evaluation and do not reproduce a real attack or incident. We added
-no private or user data; we did not screen the public texts for personal
-information.
+with passages from Natural Questions) and from public open-source READMEs.
+The sources of the READMEs are logged in \texttt{data/\_provenance/} and the
+licences of the benchmarks in \texttt{docs/contamination.md}. We use the benchmark
+texts for research only. The public repository does not contain them or the pooled
+document file; both are rebuilt from the original sources. It does contain short
+README excerpts, each with its source project logged, which remain under the
+licences of those projects. The poisoned, adversarial and cross-domain in-house
+documents in the repository were written by the team for this evaluation and do
+not reproduce a real attack or incident. We added no private or user data; we did
+not screen the public texts for personal information.
 
 \paragraph{Scope of claims.}
 This work does not claim a new detection principle. The signals are existing ones;
@@ -29,9 +31,10 @@ comparison of these signals under one protocol, where they fail, and what a
 cheaper cascade costs in recall.
 
 \paragraph{Release.}
-% CONFIRM with the course / IP office before submitting.
-At the time of writing the code and data are in a private project repository.
-Any public release will follow the institution's review.
+The code, the in-house documents, the per-document scores and the lock files of
+the held-out runs are public at \url{https://github.com/tvxsha/pds}. The code that
+produced the reported runs is tagged \texttt{freeze-v1}. The evasion pattern
+described above and its fix are part of the released detectors.
 
 \paragraph{Intended use.}
 PDS is meant to help practitioners evaluate and compare defences against RAG

@@ -24,32 +24,6 @@ Origin & Clean & Poisoned \\
 \midrule
 BIPIA & 578 & 578 \\
 PoisonedRAG (NQ passages) & 498 & 500 \\
-\section{Data and Evaluation Protocol}
-\label{sec:protocol}
-
-\subsection{Pooled document set}
-Earlier versions of this study scored 77 documents and chose thresholds on the
-same documents they were reported on. We replaced that setup with a pooled set
-of 2{,}291 documents (1{,}143 clean, 1{,}148 poisoned) from three origins
-(Table~\ref{tab:pool}). BIPIA~\cite{yi2023benchmarking} supplies clean
-documents and poisoned copies with an inserted instruction; PoisonedRAG~\cite{zou2024poisonedrag}
-supplies clean Natural Questions passages~\cite{kwiatkowski2019nq} and
-poisoned passages written to steer an answer, usually without any trigger
-phrase; and our own development documents supply a small in-house source, a
-set of cross-domain clean documents and ten hand-written adversarial documents.
-Exact duplicates were removed, and no text appears with both labels.
-
-\begin{table}[t]
-\caption{Pooled document set by origin (from \texttt{data/pooled\_stats.md}).}
-\label{tab:pool}
-\centering
-\footnotesize
-\begin{tabular}{@{}lrr@{}}
-\toprule
-Origin & Clean & Poisoned \\
-\midrule
-BIPIA & 578 & 578 \\
-PoisonedRAG (NQ passages) & 498 & 500 \\
 In-house development documents & 55 & 60 \\
 In-house cross-domain documents & 12 & 0 \\
 In-house adversarial documents & 0 & 10 \\
@@ -121,7 +95,6 @@ a detector can be deployed. These values are computed from the rates above; they
 are not measured on a stream with that share.
 
 \subsection{One-shot test discipline}
-% NOTE: keep this paragraph only if the freeze (ROADMAP 11.3) was carried out as written.
 The configuration (methods, budgets, seeds, bootstrap settings) was committed
 and tagged before the test role was scored. The held-out documents were scored
 once per seed by a single script that refuses to run without the frozen
