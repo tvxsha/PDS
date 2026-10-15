@@ -582,7 +582,7 @@ def fit_models(seed) -> FittedModels
 - [ ] **N3** Stress-set evaluation under the protocol thresholds (and the blind runs at the freeze) (2 h, wave 2)
 - [x] **11.3** Venue shortlist (1 h, wave 2)
 - [ ] **6.1** README refresh (0.5 h, wave 3)
-- [ ] **10.2** Paper: related work update (1.5 h, wave 3)
+- [x] **10.2** Paper: related work update (1.5 h, wave 3)
 - [ ] **10.3** Paper: data and protocol section (1.5 h, wave 3)
 - [ ] **10.4** Paper: external validity section (1 h, wave 3)
 - [ ] **10.8** Paper: limitations update (1.5 h, wave 3)

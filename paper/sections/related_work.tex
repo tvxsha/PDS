@@ -1,34 +1,65 @@
 \section{Related Work}
 
 \subsection{Indirect prompt injection and RAG poisoning}
-Yi et al.\ introduce BIPIA, the first benchmark for indirect prompt
-injection, and show that language models are broadly unable to
-distinguish informational context from instructions embedded within it
-\cite{yi2023benchmarking}. Hines et al.\ propose spotlighting, an
-input-transformation defense that makes the provenance of untrusted text
-explicit to the model, reducing injection success without requiring the
-untrusted content to be filtered beforehand \cite{hines2024spotlighting}.
-Su et al.\ evaluate RAG systems directly under adversarial poisoning and
-find that a poisoned passage can influence both retrieval and generation,
-motivating detection at the document level rather than relying on the
-generator to notice an attack \cite{su2024robustrag}. Chen et al.\ study
-whether indirect prompt injections can be both detected and removed once
-retrieved, reinforcing that retrieved content should be treated as
-untrusted input by default \cite{chen2025detectremove}. Zhang et al.\ show
-that a poisoning attack requiring only a single injected document per
-targeted query is practical and stealthy, the threat model we adopt
-\cite{zhang2025practical}.
+Indirect prompt injection exploits the fact that language models process
+external content as well as user instructions. Greshake et al. demonstrate
+that retrieved or otherwise externally supplied text can steer
+LLM-integrated applications, including by changing their behavior and
+triggering unintended actions \cite{greshake2023indirect}. Yi et al.
+introduce BIPIA as a benchmark for measuring this risk across tasks in which
+malicious instructions are embedded in ordinary external content
+\cite{yi2023benchmarking}. These works motivate treating retrieved documents
+as untrusted inputs, while also showing that document-level screening is only
+one possible defense layer.
 
-\subsection{Embedding-based anomaly detection}
-Lee et al.\ propose CED, a training-free method for distinguishing
-in-distribution from out-of-distribution text using embedding-space
-differences, and note that normal and anomalous text can occupy
-overlapping regions of embedding space, a difficulty directly relevant to
-our own failure analysis \cite{lee2024ced}.
+RAG knowledge poisoning targets the contents of the retrieval database.
+PoisonedRAG formulates attacks that insert a small number of malicious texts
+to steer answers to attacker-chosen targets \cite{zou2024poisonedrag}. Chen
+et al. study detection and removal of indirect injections in retrieved
+documents and provide a benchmark for both tasks \cite{chen2025detectremove}.
+Their work is close to PDS in its document-level focus, but evaluates
+instruction detection and removal models; PDS instead compares existing
+pattern, embedding, perplexity, and learned-fusion signals under a fixed
+false-alarm protocol.
+
+\subsection{Prompt-injection datasets and detectors}
+The deepset prompt-injections dataset provides labeled benign and injection
+examples and is one source of training data for open prompt-injection
+classifiers \cite{deepset2024dataset}. Protect AI's DeBERTa-v3-base
+prompt-injection model is a published classifier trained on a mixture of
+public datasets and crafted injections; its model card describes English
+input and notes limitations on jailbreak and non-English detection
+\cite{protectai2024deberta}. These resources provide useful comparison
+points, but their reported performance depends on their training data and
+evaluation distributions. PDS evaluates the published classifier alongside
+signals that do not require a task-specific learned classifier.
+
+Perplexity filtering is another lightweight signal. Alon and Kamfonas
+evaluate perplexity for detecting language-model-generated adversarial
+attacks and report that false positives are a significant challenge for
+plain perplexity filtering \cite{alon2023perplexity}. This motivates
+measuring fluency as one component of a detector rather than treating it as
+a sufficient standalone decision rule.
+
+\subsection{Embedding comparison and calibration}
+CED compares text embeddings to identify out-of-distribution or hallucinated
+text, while emphasizing that these categories can overlap in embedding space
+\cite{lee2024ced}. This is relevant to PDS's embedding-anomaly signal and
+its observed sensitivity to domain shift: distance from a clean reference
+corpus is not itself evidence of malicious intent.
+
+Conformal prediction provides distribution-free, finite-sample uncertainty
+sets under exchangeability assumptions and can be applied on top of a
+pretrained model \cite{angelopoulos2022conformal}. Such guarantees concern
+the specified conformal procedure and assumptions; they do not follow from
+selecting a threshold at an empirical false-alarm budget alone. PDS therefore
+reports threshold-based performance under its fixed protocol and treats
+calibration as a separate design question.
 
 \subsection{Positioning of this work}
-None of the three detection techniques used in PDS is original to this
-paper. Our contribution is a comparative failure and latency analysis:
-which signals earn their computational cost, how they should be combined,
-and where the combination still breaks under adversarial pressure and under
-domain shift.
+PDS does not propose a new detector. Its contribution is a failure-and-
+latency comparison of existing signals and their combinations under a fixed
+false-alarm budget, with attention to source shift, adversarial examples,
+and operational trade-offs. The related work establishes the threat and
+candidate signals; our evaluation asks which signals complement one another,
+what their errors look like, and what their computational cost buys.
