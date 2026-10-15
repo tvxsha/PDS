@@ -1,41 +1,171 @@
 \section{System Architecture}
+\label{sec:system}
 
-\subsection{Detector A: instruction pattern matching}
-A regular-expression detector scans document text for known override
-phrases (variants of ``ignore previous instructions,'' fake
-system-authority tags such as \texttt{[SYSTEM OVERRIDE]},
-credential-exfiltration phrasing, and, after our red-teaming, phrasing that
-exposes default or hard-coded credentials). Each pattern carries a fixed
-weight; the document score is the maximum weight among matched patterns.
-The detector is effectively free to run (about 0.1\,ms) but is blind to any
-attack that does not use a known phrasing.
+The system scores a document with five signals. Four of them (detectors A to D)
+are fused into one score; the fifth (detector E) is an external classifier that
+we only compare against. Every signal returns a number, and a document is
+flagged when its score exceeds a threshold fixed on training data
+(Section~\ref{sec:protocol}). Fig.~\ref{fig:architecture} shows the flow and
+Table~\ref{tab:latency} gives what each signal costs; the costs were measured on
+one laptop CPU (four threads, plugged in, 200 documents, three repeats).
 
-\subsection{Detector B: embedding anomaly detection}
-A sentence-embedding model (all-MiniLM-L6-v2) encodes the document and a
-reference corpus of trusted documents. The anomaly score is
-$(1-\text{sim})/2$, where sim is the cosine similarity to the nearest
-trusted document; a document far from every trusted example scores as more
-anomalous. The detector costs about 75\,ms per document on our CPU.
+\input{sections/fig_architecture}
 
-\subsection{Detector C: perplexity/fluency scoring}
-GPT-2 computes the perplexity of the document text. Very low perplexity
-(unusually smooth, template-like) and very high perplexity (garbled) are
-both treated as suspicious, with thresholds of 20 and 150. This is the most
-expensive detector, at about 280\,ms per document on our CPU.
-
-\subsection{Fusion strategies}
-Let $s_i(d)\in[0,1]$ be detector $i$'s score on document $d$. The naive
-approach is an unweighted average,
+\subsection{Detectors}
+\paragraph{A: instruction pattern matching.}
+A regular-expression detector scans the text for known override phrases
+(variants of ``ignore previous instructions,'' fake system-authority tags such
+as \texttt{[SYSTEM OVERRIDE]}, credential-exfiltration phrasing, and, after our
+red-teaming, phrasing that exposes default or hard-coded credentials). Each
+pattern $k$ carries a fixed weight $u_k\in[0,1]$ and the score is the largest
+weight among the patterns that match,
 \begin{equation}
-    s_{\text{fixed}}(d) = \frac{1}{3}\sum_{i=1}^{3} s_i(d).
+    s_A(d)=\max_{k}\,u_k\,m_k(d),\qquad m_k(d)\in\{0,1\},
+    \label{eq:pattern}
 \end{equation}
-If detector $i$'s observed scores occupy $[\ell_i, h_i]$ and $h_i-\ell_i$
-differs substantially across detectors, Eq.\ 1 under-represents the
-detector with the narrowest range regardless of how discriminative it is.
-We evaluate (1) naive fixed fusion; (2) calibrated fixed fusion, where each
-detector's scores are min-max normalized to $[0,1]$ using bounds from the
-evaluation data before averaging; (3) learned fusion, a logistic regression
-trained via five-fold stratified cross-validation on raw and on calibrated
-inputs (out-of-fold predictions reported); and (4) a staged pipeline in
-which the cheapest detector runs first and each costlier detector runs only
-if the earlier stages are inconclusive.
+where $m_k(d)=1$ if pattern $k$ matches $d$. It is effectively free (median
+\resLatMedPat\,ms) but blind to any attack that does not use a known phrasing.
+
+\paragraph{B: embedding anomaly.}
+A sentence-embedding model $e(\cdot)$ (all-MiniLM-L6-v2) encodes the document
+and a reference corpus $\mathcal{R}$ of trusted documents (the baseline role of
+the split). A document far from every trusted example scores as more anomalous,
+\begin{equation}
+    s_B(d)=\operatorname{clip}\!\Big(\tfrac12\big[1-\max_{r\in\mathcal{R}}\cos\big(e(d),e(r)\big)\big],\,0,\,1\Big),
+    \label{eq:embedding}
+\end{equation}
+with $\operatorname{clip}(x,0,1)=\min\{\max\{x,0\},1\}$. Median cost is
+\resLatMedEmb\,ms.
+
+\paragraph{C: perplexity.}
+GPT-2 computes the perplexity of the first $N\le 1{,}024$ tokens $x_1,\dots,x_N$,
+\begin{equation}
+    \mathrm{PPL}(d)=\exp\!\Big(-\frac{1}{N-1}\sum_{t=2}^{N}\log p\big(x_t\mid x_{<t}\big)\Big),
+    \label{eq:ppl}
+\end{equation}
+and both very smooth and garbled text raise the score,
+\begin{equation}
+    s_C(d)=\begin{cases}
+        \min\{1,\,(20-\mathrm{PPL})/20\}, & \mathrm{PPL}<20,\\[2pt]
+        \min\{1,\,(\mathrm{PPL}-150)/150\}, & \mathrm{PPL}>150,\\[2pt]
+        0, & \text{otherwise.}
+    \end{cases}
+    \label{eq:pplscore}
+\end{equation}
+The bands 20 and 150 were set as rough defaults and not tuned. This is the most
+expensive signal (median \resLatMedPpl\,ms, 95th percentile
+\resLatPNinetyFivePpl\,ms).
+
+\paragraph{D: sentence-level instruction classifier.}
+The document is split into a set $U(d)$ of sentence-like units. A logistic
+regression over word and bigram TF-IDF features and a few hand-written cues
+(second-person address, modal verbs such as ``must'' or ``please'') maps every
+unit to a probability, and the highest unit score is the document score, so a
+short instruction hidden in a long document is not diluted,
+\begin{equation}
+    s_D(d)=\max_{u\in U(d)}\ \sigma\big(\mathbf{v}^{\top}\boldsymbol{\phi}(u)+c\big),\qquad
+    \sigma(z)=\frac{1}{1+e^{-z}}.
+    \label{eq:sentence}
+\end{equation}
+It is trained on the training role only, from document labels alone: every
+sentence of a poisoned document is labelled poisoned and every sentence of a
+clean document clean. Sentences that occur in both classes then cancel out and
+the model learns the wording that appears only in attacks. Median cost is
+\resLatMedSen\,ms.
+
+\paragraph{E: published classifier.}
+For comparison we run a public prompt-injection classifier
+(\texttt{protectai/\allowbreak deberta-v3-base-\allowbreak prompt-injection-v2})~\cite{protectai2024deberta}.
+It reads at most 512 tokens, so a document is cut into overlapping windows
+$W(d)$ (at most eight) and the score is the margin of the most suspicious one,
+\begin{equation}
+    s_E(d)=\max_{w\in W(d)}\big[\ell_{\mathrm{inj}}(w)-\ell_{\mathrm{safe}}(w)\big],
+    \label{eq:published}
+\end{equation}
+where $\ell$ are the output logits of the injection and the other label. It is
+not fitted on our data; the training role only fixes its cut-off. Median cost
+is \resLatMedPub\,ms.
+
+\subsection{Fusion}
+Write $\mathbf{s}(d)=(s_A,s_B,s_C,s_D)$. The fused score is a logistic
+regression,
+\begin{equation}
+    s(d)=\sigma\big(\mathbf{w}^{\top}\mathbf{s}(d)+b\big),
+    \label{eq:fusion}
+\end{equation}
+fitted on the training role by minimising the class-balanced, $\ell_2$-penalised
+log-loss
+\begin{equation}
+    \begin{gathered}
+    \min_{\mathbf{w},b}\ \tfrac12\|\mathbf{w}\|^{2}+C\sum_{i}\omega_{y_i}\,\ell(y_i,s_i),\\
+    \ell(y,s)=-y\log s-(1-y)\log(1-s),\qquad \omega_y=\frac{n}{2n_y},
+    \end{gathered}
+    \label{eq:lr}
+\end{equation}
+with $C=1$ and $n_y$ the number of training documents of class $y$. The
+sentence score that the regression sees in training is out-of-fold.
+
+We compared three feature sets $\mathcal{F}$: A to C, A to D, and A to D plus E.
+The rule for choosing among them was written before any validation number was
+read. With $A(\mathcal{F})$ the mean out-of-fold training AUC of feature set
+$\mathcal{F}$ over the three seeds,
+\begin{equation}
+    \begin{gathered}
+    \mathcal{F}^{\star}=\arg\min_{\mathcal{F}\in\mathcal{T}}\ \mathrm{cost}(\mathcal{F}),\\
+    \mathcal{T}=\big\{\mathcal{F}:\ A(\mathcal{F})\ge\max\nolimits_{\mathcal{F}'}A(\mathcal{F}')-0.005\big\},
+    \end{gathered}
+    \label{eq:select}
+\end{equation}
+that is, sets within 0.005 of the best are tied and the one with fewer features
+and cheaper signals wins. Adding the sentence classifier raised the training AUC
+from 0.76 to 0.92; adding the published classifier on top changed nothing
+(0.92), so A to D is the final feature set. We also report the naive average of
+A to C and each signal alone.
+
+\subsection{Thresholds}
+For a false-alarm budget $\alpha\in\{5\%,1\%\}$, the threshold of every method
+is the upper quantile of its out-of-fold scores $\tilde s$ on the training clean
+documents $\mathcal{D}_{\mathrm{tr}}^{0}$,
+\begin{equation}
+    \tau_\alpha=Q_{1-\alpha}\big(\{\tilde s(d):\,d\in\mathcal{D}_{\mathrm{tr}}^{0}\}\big),
+    \qquad \text{flag } d \iff s(d)>\tau_\alpha ,
+    \label{eq:threshold}
+\end{equation}
+applied unchanged to held-out documents (Section~\ref{sec:protocol}). Nothing is
+tuned on validation or test.
+
+\subsection{Cost-aware cascade}
+Running all four signals on every document costs $\sum_i c_i$, where $c_i$ is the
+median time of stage $i$, and perplexity alone is most of it. We therefore
+measure two cascades whose stages are ordered by median cost (pattern, sentence
+classifier, embedding, perplexity). In the \emph{OR cascade} (design A), stage
+$i$ flags a document if $s_i(d)>\theta_i$ and otherwise passes it on. The budget
+is split across stages, $\sum_i\alpha_i=\alpha$, each $\theta_i$ is the
+$(1-\alpha_i)$ quantile of that stage's out-of-fold training clean scores, and
+the split with the highest training recall is used. By the union bound the
+false-alarm rate of the cascade on the training distribution is at most
+\begin{equation}
+    \mathrm{FPR}\ \le\ \sum_i\alpha_i=\alpha .
+    \label{eq:union}
+\end{equation}
+The rate realised on held-out documents can differ from this bound, and
+Table~\ref{tab:cascade} reports it.
+In the \emph{clear-early cascade} (design B) a stage may also allow a document at
+once when $s_i(d)<\kappa_i$, where
+\begin{equation}
+    \kappa_i=Q_{q}\big(\{s_i(d):\,d\in\mathcal{D}_{\mathrm{tr}}^{1}\}\big),\qquad q\in\{1\%,2\%,5\%\},
+    \label{eq:clear}
+\end{equation}
+is the $q$-quantile of that stage's score among poisoned training documents, so
+each stage clears at most about $q$ of the attacks. With $\rho_i$ the share of
+documents that reach stage $i$ ($\rho_1=1$), the expected cost and the saving
+against running everything are
+\begin{equation}
+    \mathbb{E}[L]=\sum_{i=1}^{4}\rho_i\,c_i,\qquad
+    \text{saving}=1-\frac{\mathbb{E}[L]}{\sum_i c_i}.
+    \label{eq:cost}
+\end{equation}
+Milliseconds in Table~\ref{tab:cascade} are such expectations, built from the
+per-signal medians in Table~\ref{tab:latency}; they are not end-to-end
+measurements, and the 95th percentile is much higher than the median for the
+slower signals.

@@ -1,0 +1,43 @@
+{
+ "evaluated_utc": "2026-10-15T10:10:07+00:00",
+ "seed": 43,
+ "split_hash": "93a61f0778",
+ "role": "test",
+ "git_head": "44687cf3dcad972e42a3173e16ee0e875706f1a6",
+ "git_tags": [
+  "freeze-v1"
+ ],
+ "config_sha256": "b8cc4b57a7ff5199b8cf4ada8ed601649ae60ab9302fb13bf8fd9eb3906d5846",
+ "methods": [
+  "pattern bank",
+  "embedding",
+  "perplexity",
+  "naive average of the 3",
+  "sentence classifier",
+  "LR on the 3 current scores",
+  "LR + sentence classifier",
+  "published classifier"
+ ],
+ "extras": [
+  "cascade"
+ ],
+ "n_train": 1116,
+ "n_eval": 373,
+ "versions": {
+  "python": "3.14.3",
+  "numpy": "2.5.2",
+  "scikit-learn": "1.9.0",
+  "pandas": "3.0.6",
+  "torch": "2.14.0",
+  "transformers": "5.16.1",
+  "sentence-transformers": "6.0.1"
+ },
+ "outputs": {
+  "final_test_seed43_scores.csv": "fbc2d587061b467451f8a66e19d2163bb697897e91a812dcbcef58385e876b5c",
+  "final_test_seed43_thresholds.json": "d461ee8e641b8d19af32f01d5a5f66af2d04453dfb97e3cfca11c319b4dd4d1c",
+  "final_test_seed43_cascade.csv": "34fa2f2dba34adba3eb33994ba5a1034712eb08376168a7e1685ab0f8b5ae3a0",
+  "final_test_seed43_cascade_stages.csv": "ae29a29a1f901bacaa3c2b56f0e64ad1e6341a4cfbda988e7b10a366b85077f3",
+  "final_test_seed43.md": "b2ca56db073b7ab7f3a2131355fe67f5efabbf51db79273584293063b8daa433"
+ },
+ "seconds": 22.7
+}

@@ -1,12 +1,15 @@
 \section{Future Work}
-The main gaps follow from the limitations. First, a held-out train/validation/test
-protocol with bootstrap confidence intervals, so that thresholds are never
-chosen on the data they are reported on. Second, a larger multi-domain
-dataset from public sources (BIPIA, PoisonedRAG and others) and comparison
-against published detectors. Third, a domain-diverse embedding baseline,
-tested by holding out cross-domain documents, to separate topic distance
-from malicious intent. Fourth, threshold selection with a formal
-false-positive guarantee via conformal calibration, which also addresses
-the calibration fragility above. Fifth, fresh adversarial documents with
-obfuscation, paraphrase and multi-document attacks, and a stronger language
-model for the perplexity signal.
+\label{sec:future}
+The results point to four next steps. First, thresholds that adapt to the source:
+per-source thresholds and conformal procedures, which give a stated guarantee
+under exchangeability, address the unequal false-alarm rates and the
+leave-one-source-out failure (Section~\ref{sec:loso}). Second, a sentence
+classifier that cannot lean on corpus style: training on several poisoning
+generators and testing on a held-out generator would show how much of its recall
+is instruction detection (Section~\ref{sec:learned}). Third, adversarial
+evaluation with obfuscation, paraphrase and detector-aware attackers, using blind
+sets, together with a normalise-then-match defence evaluated as a labelled patch
+with its false-alarm cost. Fourth, an end-to-end study of how a block, review or
+allow policy changes the answers of the downstream model, and a domain-diverse
+reference corpus and a stronger language model for the embedding and perplexity
+signals.

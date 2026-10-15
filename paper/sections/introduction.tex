@@ -1,44 +1,42 @@
 \section{Introduction}
 
-Retrieval-Augmented Generation systems answer a query by retrieving
-documents from a corpus and conditioning a language model's response on
-their contents. This architecture is now standard in production
-assistants, but it inherits a quiet assumption: that every document in the
-corpus is trustworthy. When that assumption fails, the result is
-\textit{knowledge poisoning}, the deliberate insertion of a document
-designed to manipulate downstream generation. This is not a hypothetical
-concern; indirect prompt injection through externally sourced content has
-been demonstrated against production LLM-integrated applications
-\cite{yi2023benchmarking}, and dedicated RAG poisoning attacks that require
-injecting only a single malicious passage per targeted query have since
-been shown to be practical at scale \cite{zhang2025practical}.
+Retrieval-augmented generation systems answer a query by retrieving documents
+from a corpus and conditioning a language model's response on their contents.
+The architecture is now standard in production assistants, but it inherits a
+quiet assumption: that every document in the corpus is trustworthy. When that
+assumption fails the result is \textit{knowledge poisoning}, the deliberate
+insertion of a document designed to manipulate downstream generation. The concern
+is not hypothetical: indirect prompt injection through externally sourced content
+has been demonstrated against production LLM-integrated applications
+\cite{yi2023benchmarking}, and attacks that inject a single malicious passage per
+targeted query have been shown to be practical at scale \cite{zhang2025practical}.
 
-A Poison Detection System (PDS) sits between the retriever and the
-generator and screens each document before it is trusted. The individual
-signals available for this task, keyword and instruction-pattern
-matching, embedding-based anomaly detection, and language-model fluency
-scoring, are each described in prior work. Our purpose is not to introduce
-a fourth signal, but to ask: when these signals are combined, which ones
-actually matter, why does a naive combination underperform, and where does
-the resulting system still fail, including when it is tested on documents
-unlike those it was built on.
+A poison detection system (PDS) sits between the retriever and the generator and
+screens each document before it is trusted. The signals available for this
+task are cheap and well known: instruction-pattern matching, distance from a
+trusted corpus in embedding space, language-model fluency, and small learned text
+classifiers. Papers usually report them on the corpus they were tuned on. Our
+question is different: when the signals are combined and tested on documents they
+did not see, \emph{where do they fail, and what does it cost to fix them?}
 
 \subsection{Contributions}
 \begin{enumerate}
-  \item A working three-detector PDS pipeline (pattern, embedding,
-    perplexity) evaluated on a corpus of 55 real open-source README
-    paragraphs and 60 constructed poisoned documents across four attack
-    categories, plus 10 adversarial and 12 cross-domain documents.
-  \item A diagnosed and corrected fusion failure: equal-weight averaging
-    suppresses the most informative detector purely because of a
-    raw-score-range mismatch, fixed by calibration and independently
-    confirmed by a learned fusion model (F1 0.79 $\rightarrow$ 0.97 and
-    0.98).
-  \item A staged cascade reaching the same F1 as calibrated fusion with
-    70.5\% less detector latency.
-  \item An adversarial evaluation that names a specific weakness
-    (boilerplate anchoring), a documented calibration-fragility analysis,
-    and two honest negative results: segment-level scoring does not fix
-    anchoring, and the embedding detector produced false positives on
-    every benign document from a different domain.
+  \item \textbf{One protocol.} A pooled set of 2,291 documents from two public
+    benchmarks and in-house data, group-aware splits for three seeds, thresholds set
+    on training clean documents for a fixed false-alarm budget, and a held-out
+    role scored once (Section~\ref{sec:protocol}).
+  \item \textbf{A held-out comparison} of eight methods at 5\% and 1\% budgets,
+    with group-bootstrap intervals and the precision an alert has when attacks are
+    rare (Sections~\ref{sec:heldout} and~\ref{sec:precision}).
+  \item \textbf{A failure analysis.} Recall by source and attack type; a
+    style-only control showing that part of the strongest signal reads corpus style;
+    a leave-one-source-out test in which the pooled threshold fails; and a
+    development-set pipeline that scored well on 77 documents and fell to chance on
+    new sources (Sections~\ref{sec:fail}--\ref{sec:learned}).
+  \item \textbf{A cost analysis.} Per-signal latency on a laptop CPU and two
+    cost-aware cascades, with what they save and what they lose
+    (Section~\ref{sec:cost}).
+  \item \textbf{Development-set case studies}, reported as such: a score-scale
+    mismatch that cost an equal-weight average much of its accuracy, an evasion we
+    call boilerplate anchoring, and negative results (Section~\ref{sec:devset}).
 \end{enumerate}

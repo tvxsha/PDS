@@ -8,10 +8,15 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+% run-in italic headings for \paragraph (IEEEtran would add "a)" and a colon)
+\renewcommand{\paragraph}[1]{\par\addvspace{0.4ex}\noindent\textit{#1}\hspace{0.5em}\ignorespaces}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-
+\input{tables/numbers}
 \begin{document}
 
 \title{Where Poison Detectors Fail: A Comparative Failure and Latency\\
@@ -40,52 +45,37 @@ Vellore, India}
 \maketitle
 
 \begin{abstract}
-Retrieval-Augmented Generation (RAG) pipelines trust whatever document a
-retriever hands them, which makes knowledge poisoning, the insertion of a
-malicious document into a trusted corpus, a practical and largely
-undefended attack surface. We build a Poison Detection System (PDS) that
-screens incoming documents using three published signals: instruction
-pattern matching, embedding-based anomaly detection against a clean
-baseline corpus, and language-model perplexity scoring. Rather than
-proposing a new detector, our contribution is a comparative failure
-analysis of how these signals combine and where they break. On a
-77-document development set, naive equal-weight fusion reaches only
-F1 = 0.79, not because any detector is weak, but because the embedding
-detector's raw score range is far narrower than the other two, so simple
-averaging dilutes it. Calibrating each detector to a common scale raises
-F1 to 0.97, and a logistic-regression fusion on calibrated inputs reaches
-0.98 and independently identifies the embedding detector as most
-influential. A staged pipeline that defers the costliest detector matches
-F1 = 0.97 with 70.5\% less detector latency. Red-teaming our own system
-with ten evasive documents caught nine; the miss revealed a failure mode
-we call \textit{boilerplate anchoring}, and a pattern added in response
-brings the count to ten, though that patch is not independent evidence of
-robustness. Two further results are negative: segment-level scoring did
-not help, and on twelve benign documents from another domain the system
-produced 12 false positives, all driven by the embedding detector,
-showing that detector partly measures distance from its baseline domain
-rather than malicious intent. All fusion numbers are development-set
-results and are optimistic; a held-out evaluation protocol is under way.
+Retrieval-augmented generation pipelines trust whatever a retriever returns, so one
+poisoned document can steer an answer. Cheap detectors exist, but their accuracy is
+usually reported on the corpus they were tuned on. We compare eight document-level
+methods, built from pattern matching, embedding distance, perplexity, a sentence
+classifier and a published classifier, under one protocol: group-aware splits,
+thresholds set on training documents for a fixed false-alarm budget, and a held-out
+role scored once. A fusion of the sentence classifier with the original signals
+catches most attacks at a five percent budget, but the gain is uneven: the original
+signals flag fluent passages without instructions no more often than they flag clean
+ones, and at a one percent budget the fusion keeps most instruction-style attacks but
+catches almost none of those passages. A control that sees only character n-grams
+matches the classifier on those passages, so its recall there reflects corpus style,
+not instruction detection. When a whole source is held out, the pooled threshold
+flags nearly every clean document or almost no attacks. Because attacks are rare,
+the precision of an alert falls quickly with prevalence. Perplexity dominates
+latency; a cascade that stops early on clearly clean documents saves more than half
+of that time on clean traffic, at a recall cost that is small at a one percent budget
+and larger at five percent.
 \end{abstract}
 
 \input{sections/introduction}
-
 \input{sections/related_work}
-
 \input{sections/threat_model}
-
+\input{sections/evaluation_protocol}
 \input{sections/system_architecture}
-
 \input{sections/results}
-
 \input{sections/limitations}
-
 \input{sections/ethics}
-
 \input{sections/future_work}
-
 \input{sections/conclusion}
-
+\input{sections/appendix_reproducibility}
 \input{sections/references}
 
 \end{document}
