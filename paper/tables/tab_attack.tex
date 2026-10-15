@@ -4,7 +4,7 @@
 \label{tab:attack}
 \centering
 \footnotesize
-\resizebox{\columnwidth}{!}{%
+\resizebox{\ifdim\width>\columnwidth\columnwidth\else\width\fi}{!}{%
 \begin{tabular}{@{}lrcccccc@{}}
 \toprule
 Attack type & $n$ & Pattern bank & Embedding & Perplexity & Sentence classifier & LR + sentence & Published classifier \\

@@ -110,7 +110,7 @@ def table(caption, label, colspec, header, rows, mark):
     if mark:
         out.append("% DRY RUN on the validation split: these are NOT results")
     out += [r"\begin{table}[t]", r"\caption{" + mark + caption + "}", r"\label{" + label + "}", r"\centering", r"\footnotesize",
-            r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{" + colspec + "}", r"\toprule", header + r" \\", r"\midrule"]
+            r"\resizebox{\ifdim\width>\columnwidth\columnwidth\else\width\fi}{!}{%", r"\begin{tabular}{" + colspec + "}", r"\toprule", header + r" \\", r"\midrule"]
     out += rows
     out += [r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
     return "\n".join(out) + "\n"
@@ -193,12 +193,16 @@ def t_headline(cfg, stats, mark, n_note):
 def t_precision(cfg, stats, mark):
     budgets, prevs = cfg["budgets"], cfg["prevalences"]
     cols = [(b, p) for b in budgets for p in prevs]
-    header = "Method & " + " & ".join(f"{pct(b)}\\% budget, {pct(p)}\\% poisoned" for b, p in cols)
+    k = len(prevs)
+    header = (" & " + " & ".join(f"\\multicolumn{{{k}}}{{c}}{{{pct(b)}\\% budget}}" for b in budgets) + " \\\\\n"
+              + "".join(f"\\cmidrule(lr){{{2 + i * k}-{1 + (i + 1) * k}}}" for i in range(len(budgets))) + "\n"
+              + "Method & " + " & ".join(f"{pct(p)}\\%" for b, p in cols))
     rows = []
     for m in cfg["methods"]:
         cells = [ptex(mean([s[(m, b)]["prec"][p] for s in stats])) for b, p in cols]
         rows.append(tex(DISPLAY.get(m, m)) + " & " + " & ".join(cells) + r" \\")
-    cap = ("Precision of an alert when the stated share of documents is poisoned, mean over seeds. Computed from the recall and "
+    cap = ("Precision of an alert when " + " or ".join(f"{pct(p)}\\%" for p in prevs) + " of the documents are poisoned, at each "
+           "false-alarm budget, mean over seeds. Computed from the recall and "
            "false-alarm rate in Table~\\ref{tab:headline}, not measured on a stream; a zero observed false-alarm rate is replaced by "
            "the rule-of-three bound.")
     return table(cap, "tab:precision", "@{}l" + "c" * len(cols) + "@{}", header, rows, mark)
@@ -251,13 +255,19 @@ def read_latency_table(path):
     return det, hardware, data.get("n")
 
 
+LATENCY_NAMES = {"pattern": "Pattern bank", "embedding": "Embedding", "perplexity": "Perplexity",
+                 "sentence classifier": "Sentence classifier", "published classifier": "Published classifier",
+                 "ours3": "A--C together", "ours3 + sentence": "A--D together"}
+
+
 def t_latency(path, mark):
     det, hardware, n = read_latency_table(path)
     rows = []
     for name, e in det.items():
-        rows.append(tex(name) + " & " + " & ".join(f"{e[k]:.1f}" if isinstance(e.get(k), (int, float)) else "n/a"
+        rows.append(tex(LATENCY_NAMES.get(name, name)) + " & " + " & ".join(f"{e[k]:.1f}" if isinstance(e.get(k), (int, float)) else "n/a"
                                                   for k in ("median_ms", "p95_ms", "mean_ms")) + r" \\")
-    cap = (f"Latency per document in milliseconds ({n} documents, one document at a time). " + (tex(hardware) + "." if hardware else ""))
+    cap = (f"Latency per document in milliseconds on one laptop CPU ({n} documents, one document at a time). A--C are the pattern, "
+           "embedding and perplexity signals together and A--D adds the sentence classifier. Machine and package versions are in the appendix.")
     return table(cap, "tab:latency", "@{}lrrr@{}", "Detector & median & p95 & mean", rows, mark)
 
 
@@ -353,7 +363,11 @@ def main():
     y0, g0, a0 = first["y"], first["srcg"], first["atk"]
     counts = {g: (int(((g0 == g) & (y0 == 1)).sum()), int(((g0 == g) & (y0 == 0)).sum())) for g in sorted(set(g0))}
     attack_n = {a: int(((a0 == a) & (y0 == 1)).sum()) for a in sorted(set(a0[y0 == 1]))}
-    n_note = ("Evaluation documents per seed: " + ", ".join(f"{int(len(sd['y']))} ({int(sd['y'].sum())} poisoned)" for sd in seeds_data) + ".")
+    sizes = [(int(len(sd["y"])), int(sd["y"].sum())) for sd in seeds_data]
+    if len(set(sizes)) == 1:
+        n_note = f"Each seed's evaluation set has {sizes[0][0]} documents ({sizes[0][1]} poisoned, {sizes[0][0] - sizes[0][1]} clean)."
+    else:
+        n_note = "Evaluation documents per seed: " + ", ".join(f"{n} ({p} poisoned)" for n, p in sizes) + "."
 
     os.makedirs(args.out, exist_ok=True)
     files = {"tab_headline.tex": t_headline(cfg, stats, mark, n_note), "tab_precision.tex": t_precision(cfg, stats, mark),
