@@ -1,25 +1,342 @@
 \section{Results and Discussion}
 \label{sec:results}
 
-\subsection{Dataset and protocol}
-The corpus contains 55 clean documents, paragraphs from the READMEs of ten
-open-source projects (Node.js, axios, Redis, FastAPI, pandas, Express,
-Django, NumPy, requests, Flask), and 60 poisoned documents (15 per
-category): direct instruction injection, fabricated system-authority
-messages, on-topic ``corpus poisoning'' with harmful advice and no trigger
-phrases, and garbled text. The embedding detector's reference corpus and
-its evaluation set are disjoint: 70\% of clean documents (38) form the
-trusted baseline, and the remaining 17, with all 60 poisoned documents,
-are scored (77 total). Provenance for every document is logged. Thresholds
-and calibration bounds were chosen on these same 77 documents, so all
-numbers below are development-set results and are optimistic (see
-Section~\ref{sec:limitations}).
+All numbers in Sections~\ref{sec:heldout}--\ref{sec:cost} come from the held-out
+test role of the three splits (Section~\ref{sec:protocol}): $\resNPosA$ poisoned
+and $\resNNegA$ clean documents for seed $\resSeedA$, and the same sizes for the
+other two. Recall, false-alarm rate and precision are means over the three seeds,
+with the range over seeds where it matters. The seeds overlap
+heavily, so this range shows stability to the split, not statistical
+significance; the 95\% intervals in the tables are group-bootstrap intervals
+within a seed. Sections~\ref{sec:transfer}, \ref{sec:loso} and~\ref{sec:learned} are diagnostics on
+development, training and validation documents, and say so; the test role is not used there.
 
-\subsection{Fusion method comparison}
-Table \ref{tab:fusion} summarizes the four fusion strategies.
+\subsection{Held-out detection at fixed false-alarm budgets}
+\label{sec:heldout}
+Table~\ref{tab:headline} and Fig.~\ref{fig:roc} compare all methods at the 5\%
+and 1\% budgets. Test recall matches validation recall for the fused model (0.68
+at the 5\% budget on both) but is lower for the sentence classifier alone (0.59
+against 0.64) and for the published classifier (0.07 against 0.11).
+% numbers above: eval/results/final_dryrun_seed*.md (validation) vs final_test_seed*.md; verified by paper/check_claims.py --final
+At the 5\% budget the fused LR\,+\,sentence classifier flags
+$\resTPRFiveLRsen$ of poisoned documents (95\% interval
+$\resTPRloFiveLRsen$--$\resTPRhiFiveLRsen$; $\resTPRminFiveLRsen$--$\resTPRmaxFiveLRsen$
+across seeds) at a realised false-alarm rate of $\resFPRFiveLRsen$. The sentence
+classifier alone reaches $\resTPRFiveSen$, so it supplies most of that recall and
+the original signals add the rest.
+The original signals are weak on their own:
+the pattern bank reaches $\resTPRFivePat$ with no false alarms, the embedding
+signal $\resTPRFiveEmb$ and perplexity $\resTPRFivePpl$. Fusing the three
+without the sentence classifier gives $\resTPRFiveLRthree$, but at a realised
+false-alarm rate of $\resFPRFiveLRthree$, about twice the budget, so even that
+recall is flattered. The published
+classifier reaches $\resTPRFivePub$ at a false-alarm rate of $\resFPRFivePub$.
+Tightening the budget to 1\% lowers the fused model to $\resTPROneLRsen$
+(false-alarm rate $\resFPROneLRsen$).
+
+\input{tables/tab_headline}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_roc.pdf}
+\caption{ROC curves on the held-out documents (mean over the three seeds). Markers show the operating points that the 5\% (filled) and 1\% (open) budgets produce; the dotted lines mark the budgets themselves.}
+\label{fig:roc}
+\end{figure}
+
+\subsection{Where the detectors fail}
+\label{sec:fail}
+Recall is not uniform across sources and attack types (Fig.~\ref{fig:source},
+Table~\ref{tab:source}, Fig.~\ref{fig:attack}). The sources differ in what an
+attack looks like. BIPIA documents contain an inserted instruction, which the
+pattern bank and the sentence classifier can pick up; PoisonedRAG passages are
+fluent paragraphs written to steer an answer and usually contain no trigger
+phrase, so wording-based signals have little to hold on to. At the 5\% budget
+the pattern bank and perplexity flag none of them, and the embedding signal and
+the logistic regression on the three original signals flag them about as often as
+they flag clean passages of the same source (recall 0.16 against a false-alarm
+rate of 0.15, and 0.23 against 0.22). The sentence classifier flags 0.40 of them
+and the fused model 0.61, but at the 1\% budget these fall to 0.03 and 0.09,
+while the fused model's recall on BIPIA only moves from 0.75 to 0.68.
+Section~\ref{sec:learned} asks why.
+% per-source numbers above: tab_source / final_test_seed*.md, checked by paper/check_claims.py --final
+The false-alarm
+panel of Fig.~\ref{fig:source} shows the second failure: with one pooled
+threshold, the false-alarm rate differs by source. For the fused model it is
+0.07 on BIPIA and 0.02 on PoisonedRAG; for the logistic regression on the three
+original signals it is 0.00 on BIPIA and 0.22 on PoisonedRAG, more than four
+times the budget. A threshold that suits one source is wrong for another.
+The in-house source is small
+(about ten clean documents per split), so its bars are noisy.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_source.pdf}
+\caption{Recall (top) and false-alarm rate (bottom) by source at the 5\% budget. Bars are means over the three seeds and whiskers the range over seeds. The dashed line marks the budget.}
+\label{fig:source}
+\end{figure*}
+
+\input{tables/tab_source}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_attack.pdf}
+\caption{Recall by attack type at the 5\% budget (mean over seeds; $n$ is the number of poisoned documents of that type in a test role). Cells with few documents are noisy.}
+\label{fig:attack}
+\end{figure*}
+
+\subsection{What an alert costs}
+\label{sec:precision}
+Recall and false-alarm rate say little about how useful an alert is when attacks
+are rare. By Eq.~\ref{eq:precision}, at 1\% poisoned documents the fused model
+at the 5\% budget has a precision of $\resPrecFiveLRsenPrevOne$, and at 0.1\% only
+$\resPrecFiveLRsenPrevTenth$; the 1\% budget lifts these to
+$\resPrecOneLRsenPrevOne$ and $\resPrecOneLRsenPrevTenth$ at the price of recall.
+The published classifier reaches $\resPrecFivePubPrevOne$ at 1\% poisoned
+documents. Fig.~\ref{fig:precision} and Table~\ref{tab:precision} show the whole
+range. In other words, a detector that flags a large share of attacks can still
+bury a reviewer in false alarms when poisoned documents are rare.
+
+\input{tables/tab_precision}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_precision.pdf}
+\caption{Precision of an alert against the share of poisoned documents in the retrieved stream (Eq.~\ref{eq:precision}), computed from the mean recall and false-alarm rate of each method. Dotted lines mark 1\% and 0.1\%.}
+\label{fig:precision}
+\end{figure}
+
+\subsection{Why the 1\% budget is hard}
+Fig.~\ref{fig:scores} shows the fused score of clean and poisoned documents for
+one seed, with the thresholds of both budgets. Most of the recall that is lost
+when the budget tightens comes from one source: between the 5\% and the 1\%
+budget the fused model's recall on PoisonedRAG falls from 0.61 to 0.09, while on
+BIPIA it falls only from 0.75 to 0.68. At the 1\% budget about nine in ten
+PoisonedRAG passages score below the threshold, that is, inside the range of the
+clean documents, so a threshold that tolerates fewer false alarms rejects them
+first. These are the passages that wording-based signals do not see, which
+suggests that adding more signals of the same kind would not help.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_scores.pdf}
+\caption{Fused score (LR\,+\,sentence classifier) of clean and poisoned test documents for one seed, on a log count scale. Vertical lines mark the thresholds of the 5\% and 1\% budgets.}
+\label{fig:scores}
+\end{figure}
+
+\subsection{Latency and the cost of the cascade}
+\label{sec:cost}
+Table~\ref{tab:latency} and Fig.~\ref{fig:latency} give the cost of each signal
+on one laptop CPU. Cost does not track usefulness: the sentence classifier,
+the strongest single signal, is nearly free (median $\resLatMedSen$\,ms) and the
+pattern bank is cheaper still ($\resLatMedPat$\,ms), while perplexity is the most
+expensive of our own signals (median $\resLatMedPpl$\,ms, 95th percentile
+$\resLatPNinetyFivePpl$\,ms) and the weakest at the 5\% budget.
+Latency grows with document length
+(Fig.~\ref{fig:latency}b), which explains the long tail of the 95th percentile.
+
+\input{tables/tab_latency}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_latency.pdf}
+\caption{Latency per signal on one laptop CPU: (a) median and 95th percentile; (b) median by document length.}
+\label{fig:latency}
+\end{figure*}
+
+Because most traffic is clean, a cascade can save time by stopping early.
+Table~\ref{tab:cascade} and Fig.~\ref{fig:cascade} compare running everything
+with the OR cascade and the clear-early cascade of Section~\ref{sec:system}.
+Expected milliseconds are built from the medians (Eq.~\ref{eq:cost}); they are
+not end-to-end measurements. With $q=5\%$ the clear-early cascade saves 58\% of the
+expected time on clean documents at the 5\% budget and 55\% at the 1\% budget.
+The cost is in recall: it falls from 0.68 to 0.60 at the 5\% budget, eight points,
+and from 0.36 to 0.35 at the 1\% budget. Recall is the same for every $q$ and for
+the OR cascade, so $q$ only moves the saving: 34\%, 41\% and 58\% for $q=1\%$, $2\%$
+and $5\%$ at the 5\% budget (Table~\ref{tab:cascade}).
+
+\input{tables/tab_cascade}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_cascade.pdf}
+\caption{Expected cost per clean document against recall for the cascade designs at the 5\% (a) and 1\% (b) budgets, mean over the three seeds.}
+\label{fig:cascade}
+\end{figure*}
+
+\subsection{The development-set pipeline does not transfer}
+\label{sec:transfer}
+Before building the pooled protocol we applied the frozen 77-document pipeline,
+unchanged, to 60 clean and 60 poisoned documents from each of two public sources
+(BIPIA and PoisonedRAG) that played no part in its development; nothing was tuned
+on them. Table~\ref{tab:transfer} shows the result. At the development threshold
+of 0.15 the fusion flags 98\% (BIPIA) and 100\% (PoisonedRAG) of the poisoned
+documents, and also essentially every clean document (false-alarm rate 1.00), so
+its precision is 0.50, which is what flagging everything gives. The
+threshold-free AUC of every signal and of the fusion lies between 0.44 and 0.64,
+close to a coin flip. The development F1 of 0.97 therefore describes how well
+thresholds fit 77 documents, not a detector that carries over.
 
 \begin{table}[t]
-\caption{Fusion method comparison (77-document development set)}
+\caption{Zero-shot transfer of the frozen development pipeline (calibrated fusion, threshold 0.15) to two external sources: recall, false-alarm rate (FPR) and threshold-free ROC-AUC of each signal. 60 clean and 60 poisoned documents per source. From \texttt{eval/results/external\_transfer.md}.}
+\label{tab:transfer}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccrrrr@{}}
+\toprule
+ & & & \multicolumn{4}{c}{AUC} \\
+\cmidrule(l){4-7}
+Source & Recall & FPR & Pattern & Embed. & Perplex. & Fusion \\
+\midrule
+BIPIA & 0.98 & 1.00 & 0.50 & 0.46 & 0.54 & 0.50 \\
+PoisonedRAG & 1.00 & 1.00 & 0.50 & 0.64 & 0.44 & 0.52 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{A new source: leave-one-source-out}
+\label{sec:loso}
+The test role contains the same three sources as the training role, so
+Table~\ref{tab:headline} measures detection on new documents from known
+sources. A deployer who meets a new source is in a harder position. We simulated
+it on the training and validation roles only: train on two source groups, set the
+threshold for the 5\% budget from the clean documents of those groups, and apply
+the model and the threshold unchanged to the third group (Table~\ref{tab:loso}).
+
+\begin{table}[t]
+\caption{Leave-one-source-out on the training and validation roles (no test documents). Models and the 5\% threshold come from the other source groups. AUC is threshold-free; recall and false-alarm rate (FPR) use the transferred threshold. Ranges over the three seeds, which share documents. The in-house group has 56 poisoned and 40 clean documents. From \texttt{eval/results/sentence\_loso\_seed*.md}.}
+\label{tab:loso}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Held out & Method & AUC & Recall & FPR \\
+\midrule
+BIPIA & Pattern bank & 0.77 & 0.53--0.54 & 0.00 \\
+ & LR, 3 scores & 0.80--0.86 & 0.54--0.61 & 0.00--0.12 \\
+ & Sentence clf. & 0.58--0.60 & 0.85--0.89 & 0.76--0.80 \\
+ & LR + sentence & 0.77--0.79 & 0.86--0.94 & 0.58--0.79 \\
+\midrule
+PoisonedRAG & Pattern bank & 0.50 & 0.00 & 0.00 \\
+ & LR, 3 scores & 0.56--0.60 & 0.62--0.79 & 0.48--0.68 \\
+ & Sentence clf. & 0.69--0.71 & 0.01 & 0.00 \\
+ & LR + sentence & 0.69--0.70 & 0.01 & 0.00 \\
+\midrule
+In-house & Pattern bank & 0.68--0.69 & 0.36--0.38 & 0.00 \\
+ & LR, 3 scores & 0.65--0.72 & 0.48--0.64 & 0.15--0.28 \\
+ & Sentence clf. & 0.60--0.64 & 0.21--0.27 & 0.07--0.10 \\
+ & LR + sentence & 0.67--0.71 & 0.48--0.50 & 0.12--0.20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The threshold does not carry over, and the ranking does not always either. On
+BIPIA the sentence classifier flags 0.85--0.89 of the poisoned documents and also
+0.76--0.80 of the clean ones, with an AUC of only 0.58--0.60: its recall comes
+from flagging almost everything. On PoisonedRAG the sentence classifier and the
+fused model flag 1\% of the poisoned documents and no clean ones, although their
+AUC is 0.69--0.71; the ranking holds some signal, but the threshold set on the
+other sources sits above it. The pattern bank has an AUC of 0.50 and flags
+nothing there. The model fused from the three original signals is the only one
+that keeps recall (0.54--0.61) with few false alarms (0.00--0.12) on BIPIA, and on
+PoisonedRAG it flags 0.48--0.68 of the clean documents.
+
+Two repairs help only in part. Setting the threshold from 60 clean documents of
+the new source brings the false-alarm rate back to 0.044--0.051, but not recall:
+the sentence classifier reaches 0.05--0.08 on BIPIA and 0.05--0.11 on
+PoisonedRAG. Adding 40 labelled attacks from the new source to the training data
+lifts the fused model to 0.53--0.59 on BIPIA and 0.19--0.35 on PoisonedRAG, with
+false-alarm rates up to 0.09. A threshold set on pooled sources therefore
+describes those sources, and a new source needs its own calibration and, for
+recall, its own labelled attacks.
+
+\subsection{What the strongest signal learned}
+\label{sec:learned}
+Most of the held-out recall comes from the sentence classifier, so we asked
+whether it detects instructions or the style of each corpus. We fitted a control
+that sees only character $n$-grams (no word-level instruction cues) on the same
+training role and set its threshold the same way. The decision rule was fixed
+before running: the classifier's recall on PoisonedRAG is called consistent with
+generator style if the control reaches at least 80\% of it,
+\begin{equation}
+    \mathrm{TPR}_{\mathrm{ctrl}}\ \ge\ 0.8\cdot\mathrm{TPR}_{\mathrm{clf}} .
+    \label{eq:stylerule}
+\end{equation}
+Table~\ref{tab:style} shows that the rule fires in all three seeds. The
+style-only control recovers more of the PoisonedRAG passages than the classifier
+does (0.79 to 0.93 against 0.43 to 0.47), and the two have almost the same
+document AUC there (0.94 to 0.97 against 0.95 to 0.96). The control overshoots the
+5\% budget in two seeds, but not in seed 43, where it still reaches 0.79. The
+most heavily weighted features point the same way. In the training role of seed
+42, ``renowned'' occurs in 30 poisoned and no clean documents, ``surprisingly''
+in 22 and none, and ``basketball'' in 13 and none, all of them PoisonedRAG
+passages: topic prose, not instructions. On BIPIA the picture is the opposite
+(classifier 0.82 to 0.91, control 0.24 to 0.28) and the top features are
+imperatives and code tokens, which fits instruction detection, but only within
+that corpus. We therefore do not credit the PoisonedRAG recall to instruction
+detection: part of the strongest signal is a corpus artefact, and it should not
+be expected to carry over to a new generator.
+
+\begin{table}[t]
+\caption{Sentence classifier against a character $n$-gram style control at the 5\% budget (validation documents, TPR; FPR of the control on PoisonedRAG clean documents in brackets). From the three diagnosis reports in \texttt{eval/results}.}
+\label{tab:style}
+\centering
+\footnotesize
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+ & \multicolumn{3}{c}{PoisonedRAG} & \multicolumn{2}{c}{BIPIA} \\
+\cmidrule(lr){2-4}\cmidrule(l){5-6}
+Seed & Classifier & Control & (FPR) & Classifier & Control \\
+\midrule
+42 & 0.43 & 0.89 & (0.053) & 0.91 & 0.24 \\
+43 & 0.47 & 0.79 & (0.013) & 0.90 & 0.25 \\
+44 & 0.45 & 0.93 & (0.093) & 0.82 & 0.28 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Development-set case studies}
+\label{sec:devset}
+Before the pooled protocol, we studied the three original signals on 77 documents:
+55 clean READMEs of ten open-source projects and 60 poisoned documents (15 per
+category: direct injection, fabricated system-authority messages, on-topic
+``corpus poisoning'' with harmful advice and no trigger phrases, and garbled
+text). The embedding reference corpus and its evaluation set were disjoint (38
+trusted clean documents; the other 17 clean and all 60 poisoned documents were
+scored). Thresholds and calibration bounds were chosen on these same 77
+documents, so every number in this subsection is optimistic and none of it is a
+held-out result (Section~\ref{sec:limitations}). We keep it because the failure
+cases it exposed shaped the later design.
+
+\paragraph{Score range and calibration.}
+Let $s_i\in[0,1]$ be the score of detector $i$, and let $[\ell_i,h_i]$ be the
+range its scores occupy. The naive fusion is the plain average, and the
+calibrated fusion first rescales each score to $[0,1]$,
+\begin{equation}
+    s_{\text{naive}}=\frac13\sum_{i=1}^{3}s_i,\qquad
+    \hat s_i=\frac{s_i-\ell_i}{h_i-\ell_i},\qquad
+    s_{\text{cal}}=\frac13\sum_{i=1}^{3}\hat s_i .
+    \label{eq:calibration}
+\end{equation}
+Since $s_i=\ell_i+r_i\hat s_i$ with $r_i=h_i-\ell_i$, the naive average is an
+exact reweighting of the calibrated scores,
+\begin{equation}
+    s_{\text{naive}}=\frac13\sum_{i}\ell_i+\sum_{i}\frac{r_i}{3}\,\hat s_i ,
+    \label{eq:reweight}
+\end{equation}
+so a detector with a narrow score range counts for less however discriminative it
+is. The embedding detector's raw scores occupied $[0.180,0.430]$, while pattern
+and perplexity spanned $[0,1]$. Table~\ref{tab:fusion} shows the effect: calibrating
+before averaging raised F1 from 0.79 to 0.97 with no change to any detector, and a
+learned fusion on raw scores (F1 0.88) gave the embedding detector the smallest
+coefficient (1.09, against 1.82 and 1.51) although a per-detector threshold sweep
+shows it is the strongest signal (F1 0.92 alone at its best threshold, against
+0.55 and 0.49 for pattern and perplexity). On calibrated inputs the same model
+reaches F1 0.98 and ranks the embedding detector first (coefficient 2.67).
+
+\begin{table}[t]
+\caption{Fusion method comparison (77-document development set, thresholds chosen on the same documents)}
 \label{tab:fusion}
 \centering
 \begin{tabular}{@{}lccc@{}}
@@ -30,131 +347,64 @@ Naive fixed fusion & 1.00 & 0.65 & 0.79 \\
 Learned fusion (raw scores) & 0.86 & 0.90 & 0.88 \\
 Calibrated fixed fusion & 0.98 & 0.97 & 0.97 \\
 Learned fusion (calibrated) & 0.97 & 0.98 & 0.98 \\
-Staged pipeline & 0.94 & 1.00 & 0.97 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The gap between naive and calibrated fusion is explained by score range.
-The embedding detector's raw scores occupied $[0.180, 0.430]$, while the
-pattern and perplexity detectors each spanned the full $[0,1]$ range.
-Unweighted averaging therefore compresses the embedding detector by
-construction, though a per-detector threshold sweep shows it is the
-strongest signal (F1 = 0.92 alone at its best threshold, against 0.55 and
-0.49 for pattern and perplexity). Calibrating each detector to $[0,1]$
-before averaging raises F1 from 0.79 to 0.97 with no change to any
-detector's scoring logic.
+\paragraph{Failure map by attack category.}
+Per category, the fraction of poisoned documents caught at each detector's own
+best threshold was: injection 67\% (pattern), 73\% (embedding), 33\% (perplexity),
+100\% (calibrated fusion); authority 73, 93, 0 and 93\%; corpus poisoning 13, 100,
+0 and 93\%; garbled text 0, 100, 100 and 100\%. No single detector covers every
+category. Corpus poisoning, harmful advice in ordinary technical language, was
+caught almost entirely by the embedding detector, but part of that success is
+likely topic distance from the README baseline rather than detection of malicious
+intent (see below).
 
-The learned fusion corroborates this. A logistic regression on raw scores
-reaches only F1 = 0.88 and gives the embedding detector the smallest
-coefficient of the three (1.09, against 1.82 and 1.51) despite its being
-the most discriminative signal. Trained on calibrated inputs the same model
-reaches F1 = 0.98 and ranks the embedding detector first (coefficient
-2.67). A hand-derived calibration argument and a cross-validated model thus
-converge on the same conclusion.
+\paragraph{A regex gap found by failure analysis.}
+Inspection of the missed documents found two injections containing ``ignore
+\textit{your} previous instructions,'' which the original expression did not
+match because it allowed only one optional modifier before ``instructions.''
+Accepting a possessive pronoun raised injection-category detection from 87\% to
+100\% and calibrated fusion F1 from 0.95 to 0.97, with no new false positives
+on the full corpus.
 
-\subsection{Failure map by attack category}
-Table \ref{tab:failuremap} reports, per category, the fraction of poisoned
-documents caught by each detector at its own best threshold, and by
-calibrated fusion at threshold 0.20.
+\paragraph{Adversarial red-teaming.}
+We wrote ten documents meant to defeat all three detectors: no trigger phrases,
+fluent text, and README vocabulary to keep embedding distance small. Nine of ten
+were caught in the first round. The evasion, \texttt{adv\_010}, opened with ``this
+project is distributed under the MIT license'' and then described build artifacts
+published with default demo credentials. We call this \emph{boilerplate
+anchoring}: prefixing a malicious clause with text so common in the reference
+domain that it pulls the whole-document embedding toward the baseline and dilutes
+the payload (combined score 0.106 against a threshold of 0.15). We then added two
+credential-exposure patterns, which match three of the ten adversarial documents
+and none of the 55 clean or 12 cross-domain documents, and all ten are now
+caught. Because the patterns were written after reading \texttt{adv\_010}, this is
+a fix for a found gap, \textbf{not} independent evidence of robustness.
 
-\begin{table}[t]
-\caption{Per-category detection rate}
-\label{tab:failuremap}
-\centering
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Category & Pattern & Embed. & Perplex. & Fusion \\
-\midrule
-Injection & 67\% & 73\% & 33\% & 100\% \\
-Authority & 73\% & 93\% & 0\% & 93\% \\
-Corpus poisoning & 13\% & 100\% & 0\% & 93\% \\
-Garbled/perplexity & 0\% & 100\% & 100\% & 100\% \\
-\bottomrule
-\end{tabular}
-\end{table}
+\paragraph{Calibration fragility.}\label{sec:calibration-fragility}
+Min-max bounds are set by one document at each extreme. Removing the single
+document that sets the embedding detector's lower bound moves it from 0.180 to
+0.205 and shifts the normalised embedding scores by 2.1\% on average, about 1.8
+times more than under 5th/95th-percentile bounds (1.1\%). Quantile bounds are not
+automatically better: \texttt{adv\_010} receives a lower embedding contribution
+under them (0.215) than under min-max (0.318).
 
-No single detector covers every category, the central argument for an
-ensemble. Corpus poisoning, harmful advice in ordinary technical language
-with no override phrases, is caught almost entirely by the embedding
-detector. As the cross-domain result below shows, part of that success is
-likely topic distance from the README baseline rather than detection of
-malicious intent.
+\paragraph{Cross-domain false positives.}
+Twelve benign documents (HR, support and office policies) were scored with the
+same baseline and threshold, and all 12 were flagged, each driven mainly by the
+embedding detector. Their median embedding score (0.37) is essentially that of
+the poisoned documents (0.36) and well above that of in-domain clean documents
+(0.27). The baseline contains only software READMEs, so any document in another
+style looks anomalous even when harmless: the embedding detector partly measures
+distance from the baseline domain, not malicious intent.
 
-\subsection{A regex gap found and closed by failure analysis}
-Inspection of documents missed by calibrated fusion identified two
-injection documents containing ``ignore \textit{your} previous
-instructions,'' which the original regular expression did not match because
-it allowed only one optional modifier before ``instructions.'' Generalizing
-the pattern to accept a possessive pronoun raised injection-category
-detection from 87\% to 100\% and calibrated fusion F1 from 0.95 to 0.97,
-verified by re-running the full corpus to confirm no new false positives.
-
-\subsection{Staged pipeline and latency}
-Running all three detectors on every document costs 357.4\,ms on average in
-our latest run. The staged pipeline (pattern, then embedding, then
-perplexity only if inconclusive) costs 105.3\,ms, a 70.5\% reduction, with
-F1 = 0.97. The embedding stage ran on 70\% of documents and the perplexity
-stage on 17\%. The most accurate single signal need not be the most
-expensive to deploy, provided cheaper signals first resolve the documents
-they can. This is a replay of latencies logged in one evaluation run; an
-earlier run gave 72.5\%, so the figure is indicative rather than precise.
-
-\subsection{Adversarial red-teaming}
-We wrote ten documents meant to defeat all three detectors: each avoids
-the original pattern trigger phrases, is fluent to avoid a high perplexity
-score, and imitates README vocabulary to keep embedding distance small.
-Calibration bounds were frozen from the original evaluation rather than
-recomputed, to avoid circularity. In the first round, nine of ten were
-caught. The evasion, \texttt{adv\_010}, opened with ``this project is
-distributed under the MIT license'' and then described build artifacts
-published with default demo credentials. We call this
-\textit{boilerplate anchoring}: prefixing a malicious clause with text so
-common in the reference domain that it pulls the whole-document embedding
-toward the baseline and dilutes the payload (combined score 0.106 against
-a threshold of 0.15). We did not find prior work describing this effect in
-this setting.
-
-We then added two credential-exposure patterns (default/preconfigured
-credentials, hard-coded secrets). They match three of the ten adversarial
-documents and none of the 55 clean or 12 cross-domain documents, and all
-ten are now caught (\texttt{adv\_010}: 0.406). Because the patterns were
-written after reading \texttt{adv\_010}'s wording, this is a fix for a
-found gap, \textbf{not} independent evidence of robustness; the embedding
-and perplexity detectors alone still miss that document.
-
-\subsection{Calibration fragility}
-\label{sec:calibration-fragility}
-Min-max bounds for the embedding detector are set by one document at each
-extreme. Removing the single document that sets a bound shifts the lower
-bound from 0.180 to 0.205 and the whole dataset's normalized embedding
-scores by 2.1\% on average, roughly 1.8x more than under 5th/95th-percentile
-bounds (1.1\%). The pattern and perplexity detectors are unaffected, since
-their scores tie at 0 and 1. More stable calibration is not automatically
-better detection: under quantile bounds \texttt{adv\_010} receives a lower
-embedding contribution (0.215) than under min-max (0.318), so a switch
-would require re-tuning the threshold.
-
-\subsection{Cross-domain false positives}
-Twelve benign documents (HR, support and office policies) were scored with
-the same baseline, frozen bounds and threshold. All 12 were flagged, each
-driven mainly by the embedding detector. Their median embedding score
-(0.37) is essentially that of the poisoned documents (0.36) and well above
-that of in-domain clean documents (0.27); only 1 of 17 held-out in-domain
-clean documents was flagged at threshold 0.20. The baseline contains only
-software READMEs, so any document in a different style looks anomalous even
-when harmless. The embedding detector therefore partly measures distance
-from the baseline domain, not malicious intent, and the in-domain F1 of
-0.97 must not be read as domain-general.
-
-\subsection{Negative result: segment-level scoring}
-To address boilerplate anchoring we scored each sentence independently with
-three aggregations (maximum, a blend of maximum and mean, and a high-threshold
-veto). None helped: maximum aggregation raised clean false positives from 4
-to 9 of 17 at the original threshold, and after re-tuning the peak F1 values
-were 0.90, 0.90 and 0.92, none above the 0.92 of the unmodified
-document-level embedding detector. The highest segment score of
-\texttt{adv\_010} (0.319) was below the maximum segment score of 5 of 17
-clean documents. Sentence-level scores are noisier than the document-level
-average, so the anchoring weakness is better addressed at the pattern level
-or by a different calibration scheme than by finer-grained embeddings.
+\paragraph{Negative result: segment-level scoring.}
+To address boilerplate anchoring we scored each sentence independently with three
+aggregations (maximum, a blend of maximum and mean, and a high-threshold veto).
+None helped: maximum aggregation raised clean false positives from 4 to 9 of 17
+at the original threshold, and after re-tuning the peak F1 values were 0.90, 0.90
+and 0.92, none above the 0.92 of the unmodified document-level detector. The
+highest segment score of \texttt{adv\_010} (0.319) was below the maximum segment
+score of 5 of 17 clean documents.

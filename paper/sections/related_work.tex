@@ -32,7 +32,8 @@ input and notes limitations on jailbreak and non-English detection
 \cite{protectai2024deberta}. These resources provide useful comparison
 points, but their reported performance depends on their training data and
 evaluation distributions. PDS evaluates the published classifier alongside
-signals that do not require a task-specific learned classifier.
+its own signals, one of which is a sentence classifier fitted on the training
+role of our data.
 
 Perplexity filtering is another lightweight signal. Alon and Kamfonas
 evaluate perplexity for detecting language-model-generated adversarial
@@ -57,8 +58,9 @@ reports threshold-based performance under its fixed protocol and treats
 calibration as a separate design question.
 
 \subsection{Positioning of this work}
-PDS does not propose a new detector. Its contribution is a failure-and-
-latency comparison of existing signals and their combinations under a fixed
+PDS does not claim a new detection principle: the signals are existing ones,
+and the learned parts are a linear sentence classifier and a logistic-regression
+fusion. Its contribution is a failure-and-latency comparison of existing signals and their combinations under a fixed
 false-alarm budget, with attention to source shift, adversarial examples,
 and operational trade-offs. The related work establishes the threat and
 candidate signals; our evaluation asks which signals complement one another,

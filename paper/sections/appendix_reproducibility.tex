@@ -1,0 +1,55 @@
+\appendices
+\section{Reproducibility}
+\label{app:repro}
+
+\paragraph{Environment.}
+The pinned versions are in \texttt{requirements.txt}: numpy 2.5.2, scipy 1.18.1,
+scikit-learn 1.9.0, pandas 3.0.6, matplotlib 3.11.2, torch 2.14.0, transformers
+5.16.1, sentence-transformers 6.0.1. The latency benchmark ran on Python 3.14.3;
+every report also records the interpreter, platform and package versions it ran
+with. The models are \texttt{gpt2} (perplexity),
+\texttt{all-MiniLM-L6-v2} (embedding) and
+\texttt{protectai/\allowbreak deberta-v3-base-\allowbreak prompt-injection-v2} (published classifier).
+
+\paragraph{Seeds and splits.}
+Seeds 42, 43 and 44 give the split hashes \texttt{\resHashA},
+\texttt{\resHashB} and \texttt{\resHashC}; a rebuilt pool must reproduce them.
+The held-out run writes a lock file \texttt{eval/results/final\_FINAL\_seed}$N$\texttt{.json}
+per seed, and refuses to run again once it exists.
+
+\paragraph{Commands.}
+From the repository root:
+{\footnotesize
+\begin{verbatim}
+pip install -r requirements.txt
+python -m data.pool_datasets --beir-zip nq.zip
+python -m eval.protocol --seed 42     # also 43, 44
+python -m eval.final_test --seed 42 --dry-run
+python -m eval.final_test --seed 42 --final
+python -m eval.make_paper_tables --final
+python paper/make_figures.py --final
+\end{verbatim}}
+The \texttt{--final} run is allowed once per seed, after the code is committed
+and tagged. The dry run uses the validation role and writes
+\texttt{final\_dryrun\_*} files.
+
+\paragraph{What reproduces from the repository.}
+The per-document scores, thresholds and reports of every reported run are
+committed under \texttt{eval/results}, and the tables and figures of this paper are
+generated from those files and from \texttt{latency\_benchmark.json} without
+loading a model. Rebuilding the pooled document file needs downloads: the BIPIA
+host documents, the PoisonedRAG targets and the BEIR Natural Questions corpus
+(about 0.5\,GB), and the Hugging Face models above. The pooled file itself is not
+redistributed.
+
+\paragraph{Hardware.}
+Latency (Table~\ref{tab:latency}) was measured on a Windows~11 laptop with 18
+logical cores of an Intel CPU (family 6, model 170), plugged in, four threads,
+200 documents, three repeats, seed 42. % TODO: replace "an Intel CPU (family 6, model 170)" with the marketing name from Settings > System > About
+Detector scores do not depend on the hardware.
+
+\paragraph{Licences and availability.}
+BIPIA code and attack strings are MIT with component licences (WikiTableQuestions
+and Stack Exchange CC BY-SA); the PoisonedRAG repository is MIT and Natural
+Questions is CC BY-SA 3.0 (\texttt{docs/contamination.md}). Code and scores are in
+the project repository (\texttt{tvxsha/pds}). % CONFIRM: repository visibility before submission

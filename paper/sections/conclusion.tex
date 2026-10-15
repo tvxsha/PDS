@@ -1,13 +1,25 @@
 \section{Conclusion}
-We built and evaluated a three-signal Poison Detection System for RAG
-pipelines and found that the most useful results were about combination
-and failure, not any single detector's accuracy. A raw-score range mismatch
-produced an 18-point F1 gap between naive (0.79) and calibrated (0.97)
-fusion, confirmed independently by a learned fusion model, and a staged
-pipeline kept that accuracy at 70.5\% lower latency. Red-teaming exposed a
-named failure mode, boilerplate anchoring, which a targeted pattern closes
-but which finer-grained embeddings did not. Most importantly for anyone
-reusing these detectors, the embedding signal flagged every benign
-out-of-domain document, so its in-domain accuracy overstates what it
-measures. All numbers are from a small development set; the planned
-held-out protocol is the necessary next step before any broader claim.
+We compared eight document-level detectors for RAG poisoning under one protocol
+and asked where they fail rather than how high one number can go. The best method,
+a logistic-regression fusion of the three original signals and a sentence
+classifier, flags $\resTPRFiveLRsen$ of held-out attacks at a 5\% false-alarm
+budget, and $\resTPROneLRsen$ at 1\%.
+That recall is uneven: it holds up on attacks that carry an instruction, but at the
+1\% budget only about one in ten of the passages that carry none is caught. A control
+that sees only character $n$-grams shows that part of the classifier's recall on
+those passages reflects corpus style, and when a whole source is held out the pooled
+threshold either flags nearly every clean document or almost no attacks. Because
+attacks are rare, an alert is often a false alarm: at one poisoned document in a
+thousand the fused model's precision is only $\resPrecFiveLRsenPrevTenth$.
+On cost, perplexity accounts for most of the detector time, and a cascade that
+stops early on clearly clean documents saves more than half of the expected time on
+clean traffic, at a cost of 0.08 recall at the 5\% budget and 0.01 at 1\%
+(Table~\ref{tab:cascade}).
+
+These results come from benchmark attacks, about $\resNNegA$ clean documents per
+test role, and three overlapping splits. We did not test obfuscation or adaptive
+attackers, per-source or conformal thresholds, or the effect of filtering on
+downstream answers (Section~\ref{sec:limitations}). The practical lesson is that a
+cheap detector should be calibrated on the source it will protect, evaluated on
+documents from that source it has not seen, and judged by the precision of its
+alerts, not by recall alone.

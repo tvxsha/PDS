@@ -1,0 +1,131 @@
+\section{Data and Evaluation Protocol}
+\label{sec:protocol}
+
+\subsection{Pooled document set}
+Earlier versions of this study scored 77 documents and chose thresholds on the
+same documents they were reported on. We replaced that setup with a pooled set
+of 2{,}291 documents (1{,}143 clean, 1{,}148 poisoned) from three origins
+(Table~\ref{tab:pool}). BIPIA~\cite{yi2023benchmarking} supplies clean
+documents and poisoned copies with an inserted instruction; PoisonedRAG~\cite{zou2024poisonedrag}
+supplies clean Natural Questions passages~\cite{kwiatkowski2019nq} and
+poisoned passages written to steer an answer, usually without any trigger
+phrase; and our own development documents supply a small in-house source, a
+set of cross-domain clean documents and ten hand-written adversarial documents.
+Exact duplicates were removed, and no text appears with both labels.
+
+\begin{table}[t]
+\caption{Pooled document set by origin (from \texttt{data/pooled\_stats.md}).}
+\label{tab:pool}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Origin & Clean & Poisoned \\
+\midrule
+BIPIA & 578 & 578 \\
+PoisonedRAG (NQ passages) & 498 & 500 \\
+\section{Data and Evaluation Protocol}
+\label{sec:protocol}
+
+\subsection{Pooled document set}
+Earlier versions of this study scored 77 documents and chose thresholds on the
+same documents they were reported on. We replaced that setup with a pooled set
+of 2{,}291 documents (1{,}143 clean, 1{,}148 poisoned) from three origins
+(Table~\ref{tab:pool}). BIPIA~\cite{yi2023benchmarking} supplies clean
+documents and poisoned copies with an inserted instruction; PoisonedRAG~\cite{zou2024poisonedrag}
+supplies clean Natural Questions passages~\cite{kwiatkowski2019nq} and
+poisoned passages written to steer an answer, usually without any trigger
+phrase; and our own development documents supply a small in-house source, a
+set of cross-domain clean documents and ten hand-written adversarial documents.
+Exact duplicates were removed, and no text appears with both labels.
+
+\begin{table}[t]
+\caption{Pooled document set by origin (from \texttt{data/pooled\_stats.md}).}
+\label{tab:pool}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Origin & Clean & Poisoned \\
+\midrule
+BIPIA & 578 & 578 \\
+PoisonedRAG (NQ passages) & 498 & 500 \\
+In-house development documents & 55 & 60 \\
+In-house cross-domain documents & 12 & 0 \\
+In-house adversarial documents & 0 & 10 \\
+\midrule
+Total & 1{,}143 & 1{,}148 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{sections/fig_protocol}
+
+\subsection{Group-aware splits}
+Documents that share an underlying text (a BIPIA original and its poisoned
+copies, the paraphrases of one PoisonedRAG target) form a group, and a group is
+never divided between roles (Fig.~\ref{fig:protocol}). A seeded, stratified
+split assigns each group to one of four roles. The \emph{baseline} role (a
+quarter of the groups that contain a clean document; 285 documents) only builds
+the embedding detector's reference corpus, and any poisoned copy of a baseline
+document is dropped (144 documents) so that a reference document never sits next
+to its own poisoned twin. The rest is divided into \emph{train} (1{,}116
+documents), \emph{validation} (373) and \emph{test} (373). We repeat the split
+with three seeds (42, 43, 44). The seeds draw different group assignments from
+the same pool, so the three test sets overlap heavily; agreement across seeds
+shows that results are stable to the split, not that they are independent
+replications.
+
+\subsection{Operating points and metrics}
+A detector is only useful at a stated false-alarm rate, so we fix the operating
+point before looking at any held-out score. For a false-alarm budget $\alpha$
+(5\% and 1\%) the threshold $\tau_\alpha$ is the $(1-\alpha)$ quantile of the
+\emph{training} clean-document scores, out-of-fold for every fitted method
+(Eq.~\ref{eq:threshold}), and it is applied unchanged to the evaluation
+documents. Fitted methods (logistic regression, the sentence classifier) are
+trained on the training role only; we do not refit on training plus validation,
+a conservative choice. With labels $y=1$ for poisoned and $y=0$ for clean
+documents we report the recall and the realised false-alarm rate,
+\begin{equation}
+    \begin{gathered}
+    \mathrm{TPR}=\Pr\big[s(d)>\tau_\alpha\mid y=1\big],\\
+    \mathrm{FPR}=\Pr\big[s(d)>\tau_\alpha\mid y=0\big],
+    \end{gathered}
+    \label{eq:tprfpr}
+\end{equation}
+with 95\% intervals from a group bootstrap: in each of $B=1{,}000$ replicates we
+draw whole groups with replacement, recompute both rates, and report the 2.5th
+and 97.5th percentiles,
+\begin{equation}
+    \mathrm{CI}_{95}=\big[\,q_{0.025}(\mathcal{T}),\ q_{0.975}(\mathcal{T})\,\big],\quad
+    \mathcal{T}=\{\mathrm{TPR}^{(b)}\}_{b=1}^{B}.
+    \label{eq:bootstrap}
+\end{equation}
+
+\paragraph{Precision at a given share of poisoned documents.}
+Recall and false-alarm rate do not say how many alerts are real, because that
+depends on how rare poisoned documents are. If a share $\pi$ of the retrieved
+documents is poisoned, the precision of an alert follows from Bayes' rule,
+\begin{equation}
+    \mathrm{Prec}(\pi)=\frac{\pi\,\mathrm{TPR}}{\pi\,\mathrm{TPR}+(1-\pi)\,\mathrm{FPR}^{*}},
+    \label{eq:precision}
+\end{equation}
+where $n_0$ is the number of clean evaluation documents and $\mathrm{FPR}^{*}$ is
+the observed false-alarm rate, or $3/n_0$ when no false alarm was observed
+(the rule-of-three upper bound), so a method with no observed false alarm is
+not flattered. The expected number of
+alerts among $N$ retrieved documents is $N\,[\pi\,\mathrm{TPR}+(1-\pi)\,\mathrm{FPR}]$,
+of which a share $1-\mathrm{Prec}(\pi)$ are false. We quote precision at
+$\pi=1\%$ and $0.1\%$ because the alert load, not recall alone, decides whether
+a detector can be deployed. These values are computed from the rates above; they
+are not measured on a stream with that share.
+
+\subsection{One-shot test discipline}
+% NOTE: keep this paragraph only if the freeze (ROADMAP 11.3) was carried out as written.
+The configuration (methods, budgets, seeds, bootstrap settings) was committed
+and tagged before the test role was scored. The held-out documents were scored
+once per seed by a single script that refuses to run without the frozen
+configuration and writes a lock file recording the commit, the configuration
+hash and the split hash; a second run is refused. Test results therefore
+contain no choice made after seeing them. Anything we learned about a method
+after the freeze is reported as a limitation, not as a fix.

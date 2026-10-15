@@ -1,57 +1,39 @@
-% Ethics / responsible-release section (task 10.2)
-
 \section{Ethics and Responsible Release}
 \label{sec:ethics}
 
-\subsection{Dual-Use Considerations}
-A detection system for RAG poisoning is inherently dual-use: understanding
-how detectors fail is also, necessarily, a partial recipe for evading them.
-Our own adversarial red-teaming (Section~\ref{sec:results}) surfaced a real
-evasion technique -- framing a malicious instruction as generic
-documentation/license boilerplate to dilute the embedding-anomaly signal
-(``boilerplate anchoring''). We report this finding because withholding it
-would leave practitioners unaware of a real blind spot in a published
-class of defenses, which is a worse outcome than disclosing it alongside
-a discussion of mitigations (Section~\ref{sec:limitations}). This follows
-the standard responsible-disclosure norm in security research: publish the
-weakness together with what is known about addressing it, rather than
-publishing neither or publishing the weakness alone.
+\paragraph{Dual use.}
+A study of how RAG-poisoning detectors fail is also a partial guide to evading
+them. Our red-teaming surfaced one evasion, boilerplate anchoring: a malicious
+clause prefixed with generic licence text so that the embedding score drops
+(Section~\ref{sec:devset}). We report it with the pattern that closes it and the
+limits of that fix (Section~\ref{sec:limitations}), because withholding a blind
+spot in a published class of defences serves practitioners worse than disclosing it
+alongside what is known about it.
 
-\subsection{Data Provenance and Consent}
-\begin{itemize}
-  \item Clean baseline documents (\texttt{data/clean/}) are drawn from
-    real, public open-source project READMEs; sources and licenses are
-    logged in \texttt{data/\_provenance/}.
-  \item Poisoned and adversarial documents (\texttt{data/poisoned/},
-    \texttt{data/adversarial/}) were authored by the team specifically for
-    this evaluation. They are not drawn from, nor do they reproduce, any
-    real production attack, exploit, or incident.
-  \item No real user data, private corpora, or personally identifying
-    information is used anywhere in the dataset.
-\end{itemize}
+\paragraph{Data provenance.}
+Clean and poisoned documents come from public benchmarks (BIPIA and PoisonedRAG,
+with passages from Natural Questions) and from public open-source READMEs;
+sources of the READMEs are logged in \texttt{data/\_provenance/} and the licences
+of the benchmarks in \texttt{docs/contamination.md}. We use them for
+research only and do not redistribute them: the pooled document file is rebuilt
+from the sources. Poisoned and adversarial in-house documents were written by the
+team for this evaluation and do not reproduce a real attack or incident. We added
+no private or user data; we did not screen the public texts for personal
+information.
 
-\subsection{Scope of Claims}
-Consistent with \texttt{related\_work.md}, this project does not claim to
-introduce a novel detection algorithm. Its contribution is a comparative
-failure, blind-spot, and latency analysis of three published detection
-signals (instruction-pattern matching, embedding anomaly, perplexity
-scoring) and their fusion. We are explicit about this scope so the work is
-not mistaken for -- or oversold as -- a new, patent-worthy detection
-technique in isolation from calibration method (Phase 5's conformal
-calibration work is the project's primary candidate for a genuinely novel,
-disclosable technical contribution; see \texttt{docs/prior\_art.md}).
+\paragraph{Scope of claims.}
+This work does not claim a new detection principle. The signals are existing ones;
+the sentence classifier is a standard linear text classifier fitted on our
+training role, and the fusion is a logistic regression. The contribution is the
+comparison of these signals under one protocol, where they fail, and what a
+cheaper cascade costs in recall.
 
-\subsection{Pre-Publication Review}
-Per the project roadmap (task 11.1), this work will be reviewed by the
-institution's IP/patent cell \emph{before} any public posting of code,
-data, or the paper, to confirm what can safely be disclosed and when. No
-component of this project has been publicly posted outside the private
-team repository as of this writing.
+\paragraph{Release.}
+% CONFIRM with the course / IP office before submitting.
+At the time of writing the code and data are in a private project repository.
+Any public release will follow the institution's review.
 
-\subsection{Intended Use}
-PDS is intended to help practitioners evaluate and compare RAG-poisoning
-defenses, not to serve as a how-to guide for evading them. Where we discuss
-a successful evasion, we pair it with the specific gap it exposes
-(Section~\ref{sec:limitations}) and the concrete next step planned to close
-it (e.g., the credential-exposure pattern added in the dataset in response
-to the \texttt{adv\_010} finding).
+\paragraph{Intended use.}
+PDS is meant to help practitioners evaluate and compare defences against RAG
+poisoning, not to serve as a guide to evading them. Where we describe a successful
+evasion we pair it with the gap it exposes and the step that closes it.
