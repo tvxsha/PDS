@@ -5,8 +5,8 @@ import json
 import numpy as np
 import pytest
 
-from eval.fusion_v2 import (TIE, build_matrix, candidate_json, feature_list, read_selection, select_feature_set,
-                            squash)
+from eval.fusion_v2 import (TIE, WAIVED, build_matrix, candidate_json, describe_inputs, feature_list, read_selection,
+                            select_feature_set, squash)
 
 
 def aucs(**kw):
@@ -91,3 +91,14 @@ def test_candidate_file_fields():
     assert c["embedding_variants"] == ["emb_dom_z", "emb_abtt1"] and c["embedding_variant"] == "emb_dom_z + emb_abtt1"
     sel = select_feature_set(aucs(F1=0.9, F4=0.95))
     assert candidate_json(sel, None, None, "original")["uses_published"] is True
+
+
+def test_a_waived_44_completes_the_candidate_and_says_so():
+    sel = select_feature_set(aucs(F0=0.8, F1=0.93))
+    c = candidate_json(sel, None, None, WAIVED)
+    assert c["complete"] is True and c["missing_inputs"] == [] and c["waived_inputs"] == ["4.4"]
+    assert "waived" in c["note"] and "not delivered" in c["note"]
+    assert c["features"] == ["pattern", "embedding", "perplexity", "sentence"]            # F3 and F5 were not run
+    assert candidate_json(sel, None, None, "missing")["waived_inputs"] == []
+    text = " ".join(describe_inputs("original", None, WAIVED, None))
+    assert "waived" in text and "not tested" in text and "provisional" not in text.replace("marked complete", "")

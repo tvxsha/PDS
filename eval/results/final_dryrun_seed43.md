@@ -2,7 +2,7 @@
 
 This is the same code as the final test run, with validation documents in place of the held-out ones. It is not the result. Thresholds are the TRAIN clean-score quantile at the stated false-alarm budget (out-of-fold scores for fitted methods), applied unchanged to validation.
 
-Split hash 93a61f0778. Evaluation documents: 373 (201 poisoned, 172 clean); 1116 train documents. Config sha256 4aad23b6b6ce. Intervals are 95% group-bootstrap intervals (1000 resamples of whole groups: the same email, question or twin pair). With only 172 clean documents, one false alarm is 0.6%, so FPR is coarse.
+Split hash 93a61f0778. Evaluation documents: 373 (201 poisoned, 172 clean); 1116 train documents. Config sha256 2ee6766624a2. Intervals are 95% group-bootstrap intervals (1000 resamples of whole groups: the same email, question or twin pair). With only 172 clean documents, one false alarm is 0.6%, so FPR is coarse.
 
 ## False-alarm budget 5%
 
