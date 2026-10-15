@@ -5,7 +5,7 @@ Each feature set is a logistic regression (class-balanced, C = 1) fitted on TRAI
 ## Inputs
 
 - Task 4.5 kept the original embedding (eval/results/embedding_variants_selected.json): F2 is identical to F1 and is not run.
-- **Task 4.4 has not delivered eval/results/embedding_boilerplate_selected.json yet: F3 and F5 are not run, and the candidate file is marked provisional.** Run this script again once 4.4 is merged.
+- **Task 4.4 was not delivered and is waived (--waive-44): F3 and F5 are not run, and the paper must say that the boilerplate-subtraction variants were not tested.** The candidate file is marked complete with this waiver recorded.
 - The published classifier's margins come from the cache of eval.baseline_eval (F4).
 
 ## The rule (fixed before any validation number was looked at)
