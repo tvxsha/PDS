@@ -23,3 +23,9 @@ dependencies = [
 # detectors/ and fusion/ modules it wraps -- those aren't moved or
 # duplicated, just declared so `pip install -e .` picks them all up.
 packages = ["pds", "detectors", "fusion"]
+
+[tool.pytest.ini_options]
+# task 6.3: tests/ (new, no models/pool needed) plus eval/ (existing
+# pytest-style tests such as eval/test_stats.py, eval/test_signal_cache.py).
+testpaths = ["tests", "eval"]
+python_files = ["test_*.py"]

@@ -11,7 +11,20 @@ Tests the new segmented embedding detector against TWO things:
      "does it catch the one attack we already know about."
 
 Usage: python -m eval.test_segmented_detector
+
+Needs sentence-transformers/torch (the embedding detector's real model), so
+it is skipped rather than failed when those aren't installed -- task 6.3's
+CI intentionally runs without them (Rule 10 / "Do not add torch or
+transformers to CI"); this otherwise made `python -m pytest -q` abort
+collection for the whole project with one ImportError.
 """
+
+import pytest
+
+pytest.importorskip(
+    "sentence_transformers",
+    reason="heavy ML dependency; not installed in the CI environment (task 6.3)",
+)
 
 import glob
 import os
