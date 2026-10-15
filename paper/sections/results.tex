@@ -256,7 +256,9 @@ recall, its own labelled attacks.
 Most of the held-out recall comes from the sentence classifier, so we asked
 whether it detects instructions or the style of each corpus. We fitted a control
 that sees only character $n$-grams (no word-level instruction cues) on the same
-training role and set its threshold the same way. The decision rule was fixed
+training role and set its threshold the same way. Such a control mirrors the
+hypothesis-only baselines of natural language inference, which expose artefacts in
+the data~\cite{poliak2018hypothesis}. The decision rule was fixed
 before running: the classifier's recall on PoisonedRAG is called consistent with
 generator style if the control reaches at least 80\% of it,
 \begin{equation}

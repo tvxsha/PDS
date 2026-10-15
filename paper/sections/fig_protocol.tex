@@ -4,17 +4,17 @@
 \begin{tikzpicture}[
   font=\footnotesize,
   >=Stealth,
-  box/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, minimum height=0.85cm},
+  box/.style={draw=black, fill=white, rounded corners=2pt, align=center, inner sep=4pt, minimum height=0.85cm},
   role/.style={box, minimum width=4.6cm},
   arr/.style={->, thick},
-  note/.style={font=\scriptsize\itshape, text=black!65, align=left}]
-\node[box, fill=gray!12, minimum width=3.2cm] (pool) at (0,0) {pooled set\\[-1pt]{\scriptsize 2{,}291 documents}\\[-1pt]{\scriptsize 1{,}143 clean, 1{,}148 poisoned}};
-\node[box, fill=blue!7, minimum width=3.6cm] (split) at (5.0,0) {group-aware split\\[-1pt]{\scriptsize stratified, seed 42, 43, 44}\\[-1pt]{\scriptsize a group is never divided}};
-\node[role, fill=yellow!15] (base) at (10.8, 3.3) {baseline\\[-1pt]{\scriptsize 285 documents}};
-\node[role, fill=green!10] (train) at (10.8, 1.1) {train\\[-1pt]{\scriptsize 1{,}116 documents}};
-\node[role, fill=orange!14] (val) at (10.8,-1.1) {validation\\[-1pt]{\scriptsize 373 documents}};
-\node[role, fill=red!10] (test) at (10.8,-3.3) {test (held out)\\[-1pt]{\scriptsize 373 documents}};
-\node[box, fill=gray!6, minimum width=2.6cm] (drop) at (5.0,-3.3) {dropped\\[-1pt]{\scriptsize 144 poisoned twins}\\[-1pt]{\scriptsize of baseline documents}};
+  note/.style={font=\scriptsize\itshape, text=black!75, align=left}]
+\node[box, minimum width=3.2cm] (pool) at (0,0) {pooled set\\[-1pt]{\scriptsize 2{,}291 documents}\\[-1pt]{\scriptsize 1{,}143 clean, 1{,}148 poisoned}};
+\node[box, fill=gray!15, minimum width=3.6cm] (split) at (5.0,0) {group-aware split\\[-1pt]{\scriptsize stratified, seed 42, 43, 44}\\[-1pt]{\scriptsize a group is never divided}};
+\node[role] (base) at (10.8, 3.3) {baseline\\[-1pt]{\scriptsize 285 documents}};
+\node[role] (train) at (10.8, 1.1) {train\\[-1pt]{\scriptsize 1{,}116 documents}};
+\node[role] (val) at (10.8,-1.1) {validation\\[-1pt]{\scriptsize 373 documents}};
+\node[role, line width=1.2pt] (test) at (10.8,-3.3) {test (held out)\\[-1pt]{\scriptsize 373 documents}};
+\node[box, dashed, minimum width=2.6cm] (drop) at (5.0,-3.3) {dropped\\[-1pt]{\scriptsize 144 poisoned twins}\\[-1pt]{\scriptsize of baseline documents}};
 \foreach \n in {base,train,val,test}{\draw[arr] (split.east) -- ++(0.7,0) |- (\n.west);}
 \draw[arr] (pool) -- (split);
 \draw[arr] (split.south) -- (drop.north);

@@ -8,13 +8,22 @@ LLM-integrated applications, including by changing their behavior and
 triggering unintended actions \cite{greshake2023indirect}. Yi et al.
 introduce BIPIA as a benchmark for measuring this risk across tasks in which
 malicious instructions are embedded in ordinary external content
-\cite{yi2023benchmarking}. These works motivate treating retrieved documents
-as untrusted inputs, while also showing that document-level screening is only
-one possible defense layer.
+\cite{yi2023benchmarking}. Perez and Ribeiro show that instructions such as
+``ignore previous instructions'' can hijack a model's goal, which is the kind
+of phrasing that instruction-pattern matching targets~\cite{perez2022ignore}.
+Liu et al.\ formalize prompt injection and benchmark attacks and defenses
+\cite{liu2024formalizing}. These works motivate
+treating retrieved documents as untrusted inputs, while also showing that
+document-level screening is only one possible defense layer.
 
 RAG knowledge poisoning targets the contents of the retrieval database.
 PoisonedRAG formulates attacks that insert a small number of malicious texts
-to steer answers to attacker-chosen targets \cite{zou2024poisonedrag}. Chen
+to steer answers to attacker-chosen targets \cite{zou2024poisonedrag}. Zhong
+et al. show that a few adversarial passages inserted into a corpus can be
+retrieved for many queries~\cite{zhong2023poisoning}; AgentPoison poisons the
+memory or knowledge base of LLM agents~\cite{chen2024agentpoison}; and blocker
+documents make a RAG system withhold an answer~\cite{shafran2025jamming}. We did
+not evaluate against these retrieval-side attacks. Chen
 et al. study detection and removal of indirect injections in retrieved
 documents and provide a benchmark for both tasks \cite{chen2025detectremove}.
 Their work is close to PDS in its document-level focus, but evaluates
@@ -35,10 +44,19 @@ evaluation distributions. PDS evaluates the published classifier alongside
 its own signals, one of which is a sentence classifier fitted on the training
 role of our data.
 
+Other defense layers act on the model rather than on the document.
+Spotlighting marks untrusted text so that the model can tell it apart from
+instructions~\cite{hines2024spotlighting}, and StruQ separates instructions from
+data in a structured query and trains the model to follow only the instruction
+channel~\cite{chen2025struq}. PDS screens documents before they reach the
+model, so it can be combined with these.
+
 Perplexity filtering is another lightweight signal. Alon and Kamfonas
 evaluate perplexity for detecting language-model-generated adversarial
 attacks and report that false positives are a significant challenge for
-plain perplexity filtering \cite{alon2023perplexity}. This motivates
+plain perplexity filtering \cite{alon2023perplexity}. Jain et al. likewise
+evaluate a perplexity filter as a baseline defense against adversarial attacks
+on aligned language models~\cite{jain2023baseline}. This motivates
 measuring fluency as one component of a detector rather than treating it as
 a sufficient standalone decision rule.
 
@@ -57,11 +75,24 @@ selecting a threshold at an empirical false-alarm budget alone. PDS therefore
 reports threshold-based performance under its fixed protocol and treats
 calibration as a separate design question.
 
+\subsection{Evaluation practice in security}
+Arp et al. review machine-learning papers in security and list recurring
+pitfalls, among them sampling bias, data snooping, spurious correlations and the
+base-rate fallacy~\cite{arp2022dos}. Axelsson showed for intrusion detection that
+the base rate of attacks, not the detector's accuracy alone, decides how many
+alerts are false~\cite{axelsson2000base}. A related warning comes from natural
+language inference, where hypothesis-only baselines, which never see the
+premise, performed well above the majority class on a number of datasets and so
+exposed artefacts in how the data were built~\cite{poliak2018hypothesis}.
+Section~\ref{sec:protocol} adopts grouped splits, a held-out role scored once and
+precision at low prevalence for these reasons, and
+Section~\ref{sec:learned} applies a baseline of the same kind.
+
 \subsection{Positioning of this work}
 PDS does not claim a new detection principle: the signals are existing ones,
 and the learned parts are a linear sentence classifier and a logistic-regression
-fusion. Its contribution is a failure-and-latency comparison of existing signals and their combinations under a fixed
-false-alarm budget, with attention to source shift, adversarial examples,
+fusion. Its contribution is a failure-and-latency comparison of existing signals
+and their combinations under a fixed false-alarm budget, with attention to source shift, adversarial examples,
 and operational trade-offs. The related work establishes the threat and
 candidate signals; our evaluation asks which signals complement one another,
 what their errors look like, and what their computational cost buys.
