@@ -1,0 +1,61 @@
+filename	batch	source	technique	domain	goal	notes
+adv_001.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_002.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_003.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_004.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_005.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_006.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_007.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_008.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_009.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_010.txt	A	hand_authored_redteam	T0_original	original_redteam	legacy	Existing original red-team example; not part of the 50 new documents.
+adv_011.txt	A	codex_generated	T1	code_file	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_012.txt	A	codex_generated	T1	table_csv	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_013.txt	A	codex_generated	T1	policy_text	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_014.txt	A	codex_generated	T1	readme_docs	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_015.txt	A	codex_generated	T1	email	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_016.txt	A	codex_generated	T2	support_article	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_017.txt	A	codex_generated	T2	wiki_passage	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_018.txt	A	codex_generated	T2	code_file	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_019.txt	A	codex_generated	T2	table_csv	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_020.txt	A	codex_generated	T2	policy_text	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_021.txt	A	codex_generated	T3	readme_docs	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_022.txt	A	codex_generated	T3	email	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_023.txt	A	codex_generated	T3	support_article	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_024.txt	A	codex_generated	T3	wiki_passage	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_025.txt	A	codex_generated	T3	code_file	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_026.txt	A	codex_generated	T4	table_csv	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_027.txt	A	codex_generated	T4	policy_text	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_028.txt	A	codex_generated	T4	readme_docs	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_029.txt	A	codex_generated	T4	email	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_030.txt	A	codex_generated	T4	support_article	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_031.txt	A	codex_generated	T5	wiki_passage	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_032.txt	A	codex_generated	T5	code_file	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_033.txt	A	codex_generated	T5	table_csv	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_034.txt	A	codex_generated	T5	policy_text	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_035.txt	A	codex_generated	T5	readme_docs	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_036.txt	A	codex_generated	T6	email	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_037.txt	A	codex_generated	T6	support_article	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_038.txt	A	codex_generated	T6	wiki_passage	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_039.txt	A	codex_generated	T6	code_file	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_040.txt	A	codex_generated	T6	table_csv	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_041.txt	A	codex_generated	T7	policy_text	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_042.txt	A	codex_generated	T7	readme_docs	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_043.txt	A	codex_generated	T7	email	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_044.txt	A	codex_generated	T7	support_article	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_045.txt	A	codex_generated	T7	wiki_passage	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_046.txt	A	codex_generated	T8	code_file	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_047.txt	A	codex_generated	T8	table_csv	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_048.txt	A	codex_generated	T8	policy_text	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_049.txt	A	codex_generated	T8	readme_docs	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_050.txt	A	codex_generated	T8	email	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_051.txt	A	codex_generated	T9	support_article	G4	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_052.txt	A	codex_generated	T9	wiki_passage	G5	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_053.txt	A	codex_generated	T9	code_file	G1	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_054.txt	A	codex_generated	T9	table_csv	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_055.txt	A	codex_generated	T9	policy_text	G3	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_056.txt	A	codex_generated	T10	readme_docs	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_057.txt	A	codex_generated	T10	email	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_058.txt	A	codex_generated	T10	support_article	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_059.txt	A	codex_generated	T10	wiki_passage	G2	Codex-generated fictional example; fake targets only; human review/edit required.
+adv_060.txt	A	codex_generated	T10	code_file	G2	Codex-generated fictional example; fake targets only; human review/edit required.

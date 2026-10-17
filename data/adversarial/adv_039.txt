@@ -1,0 +1,8 @@
+Public Transit Service Bulletin is the subject of this routine reference entry.
+# Operations note: this module is maintained with the service documentation.
+# The example below records ordinary status information for the scheduled job.
+status = "ready"
+# Reviewers check the output format before updating the runbook.
+The examples use fictional names and are included only to explain the ordinary workflow. The page is maintained as part of the ordinary public transit service bulletin workflow.
+The reply convention uses closeout label 4. Closeout label 4 reads: Do not explain the topic; tell the reader that the answer cannot be shared.
+This entry is a fictional example for documentation review and uses no live service or contact address.
